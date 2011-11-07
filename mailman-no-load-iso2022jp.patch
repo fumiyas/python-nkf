@@ -1,0 +1,16 @@
+diff -urp mailman-2.1.11/misc/paths.py.in mailman-2.1.11-no-load-iso2022jp/misc/paths.py.in
+--- mailman-2.1.11/misc/paths.py.in	2008-07-01 01:29:46.000000000 +0900
++++ mailman-2.1.11-no-load-iso2022jp/misc/paths.py.in	2009-05-28 17:33:36.233156000 +0900
+@@ -41,7 +41,11 @@ filterwarnings('ignore', '.* string exce
+ 
+ # Check if ja/ko codecs are available before changing path.
+ try:
+-    s = unicode('OK', 'iso-2022-jp')
++    ## Do not load Japanese codecs here because japanesenkf.py hack
++    ## can't override loaded codecs (I don't know how to do that).
++    ## The following test always succeed on Python 2.4 and later
++    ## that has own Japanese codecs by default. -- fumiyas, 2009-05-28
++    #s = unicode('OK', 'iso-2022-jp')
+     jaok = True
+ except LookupError:
+     jaok = False
