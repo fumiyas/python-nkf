@@ -4,7 +4,7 @@ Python Interface to NKF2 (2009.06.02)
 
     1) Download latest nkf-2.0.9+ from http://sourceforge.jp/projects/nkf/
 
-    2) $ tar zxvf nkf-2.x.x.tar.gz
+    2) $ tar xzf nkf-2.x.x.tar.gz
 
     3) $ cd nkf-2.x.x
 
