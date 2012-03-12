@@ -1,31 +1,24 @@
 /*
-Changes.
-2009.6.2    Remove WISH_TRUE, use get_guessed_code() for nkf-2.0.9
-                 by SATOH Fumiyasu (fumiyas @ osstech co jp)
-2008.7.17   Change the type of strlen from long to int, by SATOH Fumiyasu.
-2007.2.1    Add guess() function.
-2007.1.13   Remove pynkf_parseopts(), by SATOH Fumiyasu.
-*/
-/**  Python Interface to NKF
-***************************************************************************
-**  Copyright (c) 2005 Matsumoto, Tadashi <ma2@city.plala.jp>
-**  All Rights Reserved.
-**
-**    Everyone is permitted to do anything on this program
-**    including copying, modifying, improving,
-**    as long as you don't try to pretend that you wrote it.
-**    i.e., the above copyright notice has to appear in all copies.
-**    Binary distribution requires original version messages.
-**    You don't have to ask before copying, redistribution or publishing.
-**    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
-***************************************************************************/
+ * Python Interface to NKF
+ * Copyright (c) 2012 SATOH Fumiyasu @ OSS Technology, Inc.
+ * Copyright (c) 2005 Matsumoto, Tadashi <ma2@city.plala.jp>
+ * All Rights Reserved.
+ *
+ * Everyone is permitted to do anything on this program
+ * including copying, modifying, improving,
+ * as long as you don't try to pretend that you wrote it.
+ * i.e., the above copyright notice has to appear in all copies.
+ * Binary distribution requires original version messages.
+ * You don't have to ask before copying, redistribution or publishing.
+ * THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
+ */
 
 #include "Python.h"
 #include <setjmp.h>
 
 #undef getc
 #undef ungetc
-#define getc(f)         pynkf_getc(f)         
+#define getc(f)         pynkf_getc(f)
 #define ungetc(c,f)     pynkf_ungetc(c,f)
 
 #undef putchar
@@ -40,7 +33,7 @@ static unsigned char *pynkf_iptr, *pynkf_optr;
 static jmp_buf env;
 static int pynkf_guess_flag;
 
-static int 
+static int
 pynkf_getc(FILE *f)
 {
   unsigned char c;
@@ -50,7 +43,7 @@ pynkf_getc(FILE *f)
   return (int)c;
 }
 
-static int 
+static int
 pynkf_ungetc(int c, FILE *f)
 {
   if (pynkf_icount--){

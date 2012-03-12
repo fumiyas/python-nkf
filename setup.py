@@ -5,8 +5,8 @@ from distutils.core import setup, Extension
 setup (name = "nkf",
        version="1.0",
        description="Python Interface to NKF",
-       author="Matsumoto Tadashi",
-       author_email="ma2@city.plala.jp",
+       author="SATOH Fumiyasu",
+       author_email="fumiyas@sfo.jp",
        ext_modules = [
-               Extension("nkf", ["NKF_python.c"],
+               Extension("nkf", ["nkf.c"],
                          extra_link_args = ['-s'])])

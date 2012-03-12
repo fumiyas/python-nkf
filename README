@@ -8,7 +8,7 @@ Python Interface to NKF2 (2009.06.02)
 
     3) $ cd nkf-2.x.x
 
-    4) $ tar zxvf NKF_python.tgz
+    4) $ tar xzf python-nkf.tgz
 
     5) $ cd NKF.python
 
@@ -36,9 +36,8 @@ Python Interface to NKF2 (2009.06.02)
         "CP50221"
         "CP50220"
         "UTF-8"
-    
-    ## For example   
+
+    ## For example
     import nkf
     input_code = nkf.guess('some string')
 
-Matsumoto, Tadashi  ma2@city.plala.jp
