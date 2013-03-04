@@ -1,6 +1,6 @@
 PYTHON=		python
 
-.PHONY: build
+.PHONY: build dist
 
 default: build
 
@@ -9,4 +9,8 @@ build install:
 
 clean:
 	$(PYTHON) setup.py clean --all
+	rm -rf dist
+
+dist:
+	$(PYTHON) setup.py sdist
 
