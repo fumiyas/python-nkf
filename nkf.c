@@ -78,8 +78,8 @@ pynkf_putchar(int c)
 }
 
 #define PERL_XS 1
-#include "../utf8tbl.c"
-#include "../nkf.c"
+#include "nkf-dist/utf8tbl.c"
+#include "nkf-dist/nkf.c"
 
 static PyObject *
 pynkf_convert(unsigned char* str, int strlen, char* opts, int optslen)
