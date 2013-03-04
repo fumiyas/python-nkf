@@ -3,10 +3,11 @@
 from distutils.core import setup, Extension
 
 setup (name = "nkf",
-       version="1.0",
+       version="0.1.0",
        description="Python Interface to NKF",
        author="SATOH Fumiyasu",
        author_email="fumiyas@sfo.jp",
-       ext_modules = [
-               Extension("nkf", ["nkf.c"],
-                         extra_link_args = ['-s'])])
+       url="https://github.com/fumiyas/python-nkf",
+       py_modules = ["japanesenkf"],
+       ext_modules = [Extension("nkf", ["nkf.c"])],
+       )
