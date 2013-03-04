@@ -5,7 +5,7 @@ DESTDIR=	/
 
 default: build
 
-build install:
+build:
 	$(PYTHON) setup.py $@
 
 install:
@@ -13,7 +13,7 @@ install:
 
 clean:
 	$(PYTHON) setup.py clean --all
-	rm -rf dist
+	rm -rf MANIFEST dist *.pyc
 
 dist:
 	$(PYTHON) setup.py sdist --formats=bztar --owner=root --group=root
