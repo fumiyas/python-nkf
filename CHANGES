@@ -1,5 +1,17 @@
-2009.6.2    Remove WISH_TRUE, use get_guessed_code() for nkf-2.0.9
-                 by SATOH Fumiyasu (fumiyas @ osstech co jp)
-2008.7.17   Change the type of strlen from long to int, by SATOH Fumiyasu.
-2007.2.1    Add guess() function.
-2007.1.13   Remove pynkf_parseopts(), by SATOH Fumiyasu.
+Python-NKF 20090602 (2009-06-02)
+
+  * Remove WISH_TRUE, use get_guessed_code() for nkf-2.0.9
+    by SATOH Fumiyasu (fumiyas @ osstech co jp)
+
+Python-NKF 20080717 (2008-07-17)
+
+  * Change the type of strlen from long to int, by SATOH Fumiyasu.
+
+Python-NKF 20070201 (2007-02-01)
+
+  * Add guess() function.
+
+Python-NKF 20070113 (2007-01-13)
+
+  * Remove pynkf_parseopts(), by SATOH Fumiyasu.
+
