@@ -1,18 +1,9 @@
-Python Interface to NKF2 (2009.06.02)
+Python Interface to NKF2
 
 1. How to Install
 
-    1) Download latest nkf-2.0.9+ from http://sourceforge.jp/projects/nkf/
-
-    2) $ tar xzf nkf-2.x.x.tar.gz
-
-    3) $ cd nkf-2.x.x
-
-    4) $ tar xzf python-nkf.tgz
-
-    5) $ cd NKF.python
-
-    6) # python setup.py install
+  $ make
+  $ sudo make install
 
 2. Usage
 
