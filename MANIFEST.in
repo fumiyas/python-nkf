@@ -1,0 +1,3 @@
+include CHANGES Makefile
+include nkf-dist/*.[ch]
+include mailman/*
