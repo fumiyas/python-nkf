@@ -1,5 +1,6 @@
 PYTHON=		python
 DESTDIR=	/
+SDIST_ARGS=	--formats=bztar --owner=root --group=root
 
 .PHONY: build dist
 
@@ -16,5 +17,8 @@ clean:
 	rm -rf MANIFEST dist *.pyc
 
 dist:
-	$(PYTHON) setup.py sdist --formats=bztar --owner=root --group=root
+	$(PYTHON) setup.py sdist $(SDIST_ARGS)
+
+upload:
+	$(PYTHON) setup.py sdist $(SDIST_ARGS) upload --sign
 
