@@ -2,8 +2,14 @@ Python Interface to NKF2
 
 1. How to Install
 
-  $ make
-  $ sudo make install
+  Install from PyPI:
+
+    $ sudo pip install nkf
+
+  Install from source tree:
+
+    $ make
+    $ sudo make install
 
 2. Usage
 
