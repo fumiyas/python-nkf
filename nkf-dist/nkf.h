@@ -2,7 +2,6 @@
  * 
  * nkf.h - Header file for nkf
  * 
- * $Id: nkf.h,v 1.6 2008/11/07 02:43:43 naruse Exp $
  */
 
 #ifndef NKF_H
@@ -153,6 +152,7 @@ void  setbinmode(FILE *fp)
 # ifndef HAVE_LOCALE_H
 #  define HAVE_LOCALE_H
 # endif
+#elif defined(__BIONIC__) /* bionic doesn't have locale */
 #else
 # ifndef HAVE_LANGINFO_H
 #  define HAVE_LANGINFO_H
@@ -173,6 +173,14 @@ void  setbinmode(FILE *fp)
 
 #define         FALSE   0
 #define         TRUE    1
+
+#ifndef ARG_UNUSED
+#if defined(__GNUC__)
+#  define ARG_UNUSED  __attribute__ ((unused))
+#else
+#  define ARG_UNUSED
+#endif
+#endif
 
 #ifdef WIN32DLL
 #include "nkf32.h"
