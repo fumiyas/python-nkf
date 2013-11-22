@@ -1,3 +1,10 @@
+Python-NKF 0.1.0 (2013-03-04)
+
+  * nkf 2.1.2
+  * Add nkf_codecs.py
+  * Add hacks for Mailman 2.1
+  * Upload to PyPI
+
 Python-NKF 20090602 (2009-06-02)
 
   * Remove WISH_TRUE, use get_guessed_code() for nkf-2.0.9
