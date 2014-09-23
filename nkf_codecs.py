@@ -115,7 +115,7 @@ class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
         if pos >= 0:
             match = re_designations.match(data, pos)
             if not match:
-                raise UnicodeError, "unknown designation"
+                raise UnicodeError("unknown designation")
             self.charset = CHARSETS[match.group()]
             if self.charset in [JISX0208_1978, JISX0208_1983, JISX0212_1990] and \
                (len(data) - match.end()) % 2 == 1:
@@ -442,7 +442,7 @@ if __name__ == '__main__':
     overrideEncodings()
 
     for encoding in encoding_list:
-        print '%s: encode(), decode()' % encoding
+        print('%s: encode(), decode()' % encoding)
         encoded = unicoded.encode(encoding)
         assert encoded.decode(encoding) == unicoded
 
@@ -451,7 +451,7 @@ if __name__ == '__main__':
         encoder, decoder, reader, writer = codecs.lookup(encoding)
         for func_name in ['read', 'readline', 'readlines']:
             for size in [None, -1] + range(1, 33) + [64, 128, 256, 512, 1024]:
-                print '%s: %s(%s)' % (encoding, func_name, str(size))
+                print('%s: %s(%s)' % (encoding, func_name, str(size)))
 
                 istream = reader(StringIO.StringIO(text))
                 ostream = writer(StringIO.StringIO())

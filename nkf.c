@@ -116,7 +116,11 @@ pynkf_convert(unsigned char* str, int strlen, char* opts, int optslen)
   }
 
   *pynkf_optr = 0;
-  res = PyString_FromString(pynkf_outbuf);
+  #if PY_MAJOR_VERSION >= 3
+    res = PyBytes_FromString(pynkf_outbuf);
+  #else
+    res = PyString_FromString(pynkf_outbuf);
+  #endif
   PyMem_Free(pynkf_outbuf);
   return res;
 }
@@ -139,8 +143,11 @@ pynkf_convert_guess(unsigned char* str, int strlen)
   kanji_convert(NULL);
 
   codename = get_guessed_code();
-
-  res = PyString_FromString(codename);
+  #if PY_MAJOR_VERSION >= 3
+    res = PyBytes_FromString(codename);
+  #else
+    res = PyString_FromString(codename);
+  #endif
   return res;
 }
 
@@ -186,10 +193,33 @@ nkfmethods[] = {
   {NULL, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef
+moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "nkf",
+  NULL,
+  NULL,
+  nkfmethods,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
 /* Module initialization function */
+PyObject *
+PyInit_nkf(void)
+#else
 void
 initnkf(void)
+#endif
 {
-  Py_InitModule("nkf", nkfmethods);
+  #if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+    return module;
+  #else
+    Py_InitModule("nkf", nkfmethods);
+  #endif
 }
 #endif
