@@ -144,7 +144,7 @@ pynkf_convert_guess(unsigned char* str, int strlen)
 
   codename = get_guessed_code();
   #if PY_MAJOR_VERSION >= 3
-    res = PyBytes_FromString(codename);
+    res = PyUnicode_FromString(codename);
   #else
     res = PyString_FromString(codename);
   #endif
