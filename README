@@ -33,6 +33,8 @@ Python Interface to NKF2
         "CP50221"
         "CP50220"
         "UTF-8"
+        "UTF-16"
+        "UTF-32"
 
     ## For example
     import nkf
