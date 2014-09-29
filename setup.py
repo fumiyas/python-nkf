@@ -3,7 +3,7 @@
 from distutils.core import setup, Extension
 
 setup (name = "nkf",
-       version="0.1.1",
+       version="0.2.0",
        description="Python Interface to NKF",
        author="SATOH Fumiyasu",
        author_email="fumiyas@osstech.jp",

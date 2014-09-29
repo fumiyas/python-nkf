@@ -1,3 +1,7 @@
+Python-NKF 0.2.0 (2014-09-29)
+
+  * Support Python 3 by @ikegami-yukino
+
 Python-NKF 0.1.1 (2013-11-22)
 
   * nkf 2.1.3
