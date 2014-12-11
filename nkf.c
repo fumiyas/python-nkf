@@ -67,7 +67,7 @@ pynkf_putchar(int c)
   }else{
     size = pynkf_obufsize + pynkf_obufsize;
     p = (unsigned char *)PyMem_Realloc(pynkf_outbuf, size + 1);
-    if (pynkf_outbuf == NULL){ longjmp(env, 1); }
+    if (p == NULL){ longjmp(env, 1); }
     pynkf_outbuf = p;
     pynkf_optr = pynkf_outbuf + pynkf_obufsize;
     pynkf_ocount = pynkf_obufsize;
