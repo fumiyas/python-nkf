@@ -1,6 +1,6 @@
 /*
  * Python Interface to NKF
- * Copyright (c) 2012-2014 SATOH Fumiyasu @ OSS Technology Copr., Japan
+ * Copyright (c) 2012-2019 SATOH Fumiyasu @ OSS Technology Corp., Japan
  * Copyright (c) 2005 Matsumoto, Tadashi <ma2@city.plala.jp>
  * All Rights Reserved.
  *

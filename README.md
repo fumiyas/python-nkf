@@ -1,7 +1,7 @@
 Python Interface to NKF
 ======================================================================
 
-  * Copyright (c) 2012-2016 SATOH Fumiyasu @ OSS Technology Corp., Japan
+  * Copyright (c) 2012-2019 SATOH Fumiyasu @ OSS Technology Corp., Japan
   * Copyright (c) 2005 Matsumoto, Tadashi (original author)
   * License: BSD
   * Development home: <https://github.com/fumiyas/python-nkf>
