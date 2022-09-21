@@ -13,6 +13,9 @@
  * THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
  */
 
+// Support https://github.com/python/cpython/issues/85115
+#define PY_SSIZE_T_CLEAN
+
 #include "Python.h"
 #include <setjmp.h>
 
@@ -157,9 +160,9 @@ static
 PyObject *pynkf_nkf(PyObject *self, PyObject *args)
 {
   unsigned char *str;
-  int strlen;
+  Py_ssize_t strlen;
   char *opts;
-  int optslen;
+  Py_ssize_t optslen;
   PyObject* res;
 
   if (!PyArg_ParseTuple(args, "s#s#", &opts, &optslen, &str, &strlen)) {
@@ -175,7 +178,7 @@ static
 PyObject *pynkf_guess(PyObject *self, PyObject *args)
 {
   unsigned char *str;
-  int strlen;
+  Py_ssize_t strlen;
   PyObject* res;
 
   if (!PyArg_ParseTuple(args, "s#", &str, &strlen)) {
