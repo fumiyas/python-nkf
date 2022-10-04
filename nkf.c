@@ -200,14 +200,8 @@ nkfmethods[] = {
 static struct PyModuleDef
 moduledef = {
   PyModuleDef_HEAD_INIT,
-  "nkf",
-  NULL,
-  NULL,
-  nkfmethods,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  .m_name = "nkf",
+  .m_methods = nkfmethods
 };
 
 /* Module initialization function */
