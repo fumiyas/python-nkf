@@ -1,6 +1,6 @@
 /*
  * Python Interface to NKF
- * Copyright (c) 2012-2019 SATOH Fumiyasu @ OSS Technology Corp., Japan
+ * Copyright (c) 2012-2024 SATOH Fumiyasu @ OSS Technology Corp., Japan
  * Copyright (c) 2005 Matsumoto, Tadashi <ma2@city.plala.jp>
  * All Rights Reserved.
  *
@@ -13,7 +13,6 @@
  * THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
  */
 
-// Support https://github.com/python/cpython/issues/85115
 #define PY_SSIZE_T_CLEAN
 
 #include "Python.h"
@@ -29,7 +28,7 @@
 #undef FALSE
 #define putchar(c)      pynkf_putchar(c)
 
-static int pynkf_ibufsize, pynkf_obufsize;
+static Py_ssize_t pynkf_ibufsize, pynkf_obufsize;
 static unsigned char *pynkf_inbuf, *pynkf_outbuf;
 static int pynkf_icount,pynkf_ocount;
 static unsigned char *pynkf_iptr, *pynkf_optr;
@@ -58,7 +57,7 @@ pynkf_ungetc(int c, FILE *f)
 static void
 pynkf_putchar(int c)
 {
-  size_t size;
+  Py_ssize_t size;
   unsigned char *p;
 
   if (pynkf_guess_flag) {
@@ -70,7 +69,7 @@ pynkf_putchar(int c)
   }else{
     size = pynkf_obufsize + pynkf_obufsize;
     p = (unsigned char *)PyMem_Realloc(pynkf_outbuf, size + 1);
-    if (p == NULL){ longjmp(env, 1); }
+    if (pynkf_outbuf == NULL){ longjmp(env, 1); }
     pynkf_outbuf = p;
     pynkf_optr = pynkf_outbuf + pynkf_obufsize;
     pynkf_ocount = pynkf_obufsize;
@@ -85,7 +84,7 @@ pynkf_putchar(int c)
 #include "nkf-dist/nkf.c"
 
 static PyObject *
-pynkf_convert(unsigned char* str, int strlen, char* opts, int optslen)
+pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t optslen)
 {
   PyObject * res;
 
@@ -119,11 +118,11 @@ pynkf_convert(unsigned char* str, int strlen, char* opts, int optslen)
   }
 
   *pynkf_optr = 0;
-  #if PY_MAJOR_VERSION >= 3
-    res = PyBytes_FromString(pynkf_outbuf);
-  #else
-    res = PyString_FromString(pynkf_outbuf);
-  #endif
+#if PY_MAJOR_VERSION >= 3
+  res = PyBytes_FromString(pynkf_outbuf);
+#else
+  res = PyString_FromString(pynkf_outbuf);
+#endif
   PyMem_Free(pynkf_outbuf);
   return res;
 }
@@ -146,11 +145,11 @@ pynkf_convert_guess(unsigned char* str, int strlen)
   kanji_convert(NULL);
 
   codename = get_guessed_code();
-  #if PY_MAJOR_VERSION >= 3
-    res = PyUnicode_FromString(codename);
-  #else
-    res = PyString_FromString(codename);
-  #endif
+#if PY_MAJOR_VERSION >= 3
+  res = PyUnicode_FromString(codename);
+#else
+  res = PyString_FromString(codename);
+#endif
   return res;
 }
 
@@ -190,39 +189,39 @@ PyObject *pynkf_guess(PyObject *self, PyObject *args)
 
 #ifndef EXTERN_NKF
 static PyMethodDef
-nkfmethods[] = {
+nkfMethods[] = {
+#if PY_MAJOR_VERSION >= 3
+  {"nkf", pynkf_nkf, METH_VARARGS, ""},
+  {"guess", pynkf_guess, METH_VARARGS, ""},
+  {NULL, NULL, 0, NULL}
+#else
   {"nkf", pynkf_nkf, METH_VARARGS},
   {"guess", pynkf_guess, METH_VARARGS},
   {NULL, NULL}
+#endif
 };
 
 #if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef
-moduledef = {
+static struct PyModuleDef nkfmodule = {
   PyModuleDef_HEAD_INIT,
   "nkf",
-  NULL,
-  NULL,
-  nkfmethods,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  "",
+  -1,
+  nkfMethods
 };
 
 /* Module initialization function */
-PyObject *
+PyMODINIT_FUNC
 PyInit_nkf(void)
 #else
 void
 initnkf(void)
 #endif
 {
-  #if PY_MAJOR_VERSION >= 3
-    PyObject *module = PyModule_Create(&moduledef);
-    return module;
-  #else
-    Py_InitModule("nkf", nkfmethods);
-  #endif
+#if PY_MAJOR_VERSION >= 3
+  return PyModule_Create(&nkfmodule);
+#else
+  Py_InitModule("nkf", nkfMethods);
+#endif
 }
 #endif

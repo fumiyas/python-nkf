@@ -1,4 +1,4 @@
-PYTHON=		python
+PYTHON=		python3
 DESTDIR=	/
 SDIST_ARGS=	--formats=bztar --owner=root --group=root
 
