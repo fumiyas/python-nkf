@@ -128,7 +128,7 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
 }
 
 static PyObject *
-pynkf_convert_guess(unsigned char* str, int strlen)
+pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
 {
   PyObject * res;
   const char *codename;
