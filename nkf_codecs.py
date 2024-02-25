@@ -9,13 +9,13 @@
 ##
 ## Redistribution and use in source and binary forms, with or without
 ## modification, are permitted provided that the following conditions are met:
-## 
+##
 ## 1. Redistributions of source code must retain the above copyright notice, this
 ##    list of conditions and the following disclaimer.
 ## 2. Redistributions in binary form must reproduce the above copyright notice,
 ##    this list of conditions and the following disclaimer in the documentation
 ##    and/or other materials provided with the distribution.
-## 
+##
 ## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ## ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 ## WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,7 +26,7 @@
 ## ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ## SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-## 
+##
 ## The views and conclusions contained in the software and documentation are those
 ## of the authors and should not be interpreted as representing official policies,
 ## either expressed or implied, of the author(s).
@@ -46,19 +46,27 @@ __version__ = '0.3.0'
 
 import nkf
 import codecs
-import _codecs_iso2022, _codecs_jp
+import _codecs_iso2022
+import _codecs_jp
 import encodings
-import sys
 import re
+
+import encodings.iso2022_jp_ext as iso2022_jp
+import encodings.euc_jp as euc_jp
+import encodings.shift_jis as shift_jis
 
 ## ======================================================================
 
 regentry_by_encoding = {}
+
+
 def nkf_codec_search_func(encoding):
     if regentry_by_encoding.has_key(encoding):
         return regentry_by_encoding[encoding]
     else:
         return None
+
+
 codecs.register(nkf_codec_search_func)
 
 ## ======================================================================
@@ -66,14 +74,12 @@ codecs.register(nkf_codec_search_func)
 ## ISO-2022-JP codecs by NKF
 ## ----------------------------------------------------------------------
 
-import encodings.iso2022_jp_ext as iso2022_jp
-
-US_ASCII          = 1
-JISX0201_ROMAN    = 2
+US_ASCII = 1
+JISX0201_ROMAN = 2
 JISX0201_KATAKANA = 3
-JISX0208_1978     = 4
-JISX0208_1983     = 5
-JISX0212_1990     = 6
+JISX0208_1978 = 4
+JISX0208_1983 = 5
+JISX0212_1990 = 6
 
 CHARSETS = {
     "\033(B": US_ASCII,
@@ -92,6 +98,7 @@ re_designations = re.compile("\033(\\([BIJ]|\\$[@B]|\\$\\(D)")
 
 iso2022_jp_Codec = _codecs_iso2022.getcodec('iso2022_jp')
 
+
 class iso2022_jp_nkf_Codec(codecs.Codec):
     def encode(self, input, errors='strict'):
         ret = input.encode('utf8', 'replace')
@@ -103,17 +110,21 @@ class iso2022_jp_nkf_Codec(codecs.Codec):
         ret = unicode(ret, 'utf8', 'replace')
         return ret, len(input)
 
+
 class iso2022_jp_nkf_IncrementalEncoder(iso2022_jp.IncrementalEncoder):
     codec = iso2022_jp_Codec
 
+
 class iso2022_jp_nkf_IncrementalDecoder(iso2022_jp.IncrementalDecoder):
     codec = iso2022_jp_Codec
+
 
 class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
     def __init__(self, stream, errors='strict'):
         codecs.StreamReader.__init__(self, stream, errors)
         self.data = ''
         self.charset = US_ASCII
+
     def _read(self, func, size):
         if size == 0:
             return u''
@@ -140,10 +151,13 @@ class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
             if self.charset != US_ASCII:
                 data = data + DESIGNATIONS[US_ASCII]
         return self.decode(data, self.errors)[0]
+
     def read(self, size=-1):
         return self._read(self.stream.read, size)
+
     def readline(self, size=-1):
         return self._read(self.stream.readline, size)
+
     def readlines(self, size=-1):
         data = self._read(self.stream.read, size)
         buffer = []
@@ -154,33 +168,37 @@ class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
                 if end < len(data):
                     buffer.append(data[end:])
                 break
-            buffer.append(data[end:pos+1])
-            end = pos+1
+            buffer.append(data[end:pos + 1])
+            end = pos + 1
         return buffer
+
     def reset(self):
         self.data = ''
+
 
 class iso2022_jp_nkf_StreamWriter(iso2022_jp_nkf_Codec, codecs.StreamWriter):
     codec = iso2022_jp_Codec
 
+
 def iso2022_jp_nkf_getregentry():
     return codecs.CodecInfo(
-        name =                  'iso2022_jp_nkf',
-        encode =                iso2022_jp_nkf_Codec().encode,
-        decode =                iso2022_jp_nkf_Codec().decode,
-        incrementalencoder =    iso2022_jp_nkf_IncrementalEncoder,
-        incrementaldecoder =    iso2022_jp_nkf_IncrementalDecoder,
-        streamreader =          iso2022_jp_nkf_StreamReader,
-        streamwriter =          iso2022_jp_nkf_StreamWriter,
+        name='iso2022_jp_nkf',
+        encode=iso2022_jp_nkf_Codec().encode,
+        decode=iso2022_jp_nkf_Codec().decode,
+        incrementalencoder=iso2022_jp_nkf_IncrementalEncoder,
+        incrementaldecoder=iso2022_jp_nkf_IncrementalDecoder,
+        streamreader=iso2022_jp_nkf_StreamReader,
+        streamwriter=iso2022_jp_nkf_StreamWriter,
     )
+
+
 regentry_by_encoding['iso2022_jp_nkf'] = iso2022_jp_nkf_getregentry()
 
 ## EUC-JP codecs by NKF
 ## ----------------------------------------------------------------------
 
-import encodings.euc_jp as euc_jp
-
 euc_jp_Codec = _codecs_jp.getcodec('euc_jp')
+
 
 class euc_jp_nkf_Codec(codecs.Codec):
     def encode(self, input, errors='strict'):
@@ -193,16 +211,20 @@ class euc_jp_nkf_Codec(codecs.Codec):
         ret = unicode(ret, 'utf8', 'replace')
         return ret, len(input)
 
+
 class euc_jp_nkf_IncrementalEncoder(euc_jp.IncrementalEncoder):
     codec = euc_jp_Codec
 
+
 class euc_jp_nkf_IncrementalDecoder(euc_jp.IncrementalDecoder):
     codec = euc_jp_Codec
+
 
 class euc_jp_nkf_StreamReader(euc_jp_nkf_Codec, codecs.StreamReader):
     def __init__(self, stream, errors='strict'):
         codecs.StreamReader.__init__(self, stream, errors)
         self.data = ''
+
     def _read(self, func, size):
         if size == 0:
             return u''
@@ -222,10 +244,13 @@ class euc_jp_nkf_StreamReader(euc_jp_nkf_Codec, codecs.StreamReader):
                     break
             data, self.data = data[:p], data[p:]
         return self.decode(data, self.errors)[0]
+
     def read(self, size=-1):
         return self._read(self.stream.read, size)
+
     def readline(self, size=-1):
         return self._read(self.stream.readline, size)
+
     def readlines(self, size=-1):
         data = self._read(self.stream.read, size)
         buffer = []
@@ -236,33 +261,37 @@ class euc_jp_nkf_StreamReader(euc_jp_nkf_Codec, codecs.StreamReader):
                 if end < len(data):
                     buffer.append(data[end:])
                 break
-            buffer.append(data[end:pos+1])
-            end = pos+1
+            buffer.append(data[end:pos + 1])
+            end = pos + 1
         return buffer
+
     def reset(self):
         self.data = ''
+
 
 class euc_jp_nkf_StreamWriter(euc_jp_nkf_Codec, codecs.StreamWriter):
     codec = euc_jp_Codec
 
+
 def euc_jp_nkf_getregentry():
     return codecs.CodecInfo(
-        name =                  'euc_jp_nkf',
-        encode =                euc_jp_nkf_Codec().encode,
-        decode =                euc_jp_nkf_Codec().decode,
-        incrementalencoder =    euc_jp_nkf_IncrementalEncoder,
-        incrementaldecoder =    euc_jp_nkf_IncrementalDecoder,
-        streamreader =          euc_jp_nkf_StreamReader,
-        streamwriter =          euc_jp_nkf_StreamWriter,
+        name='euc_jp_nkf',
+        encode=euc_jp_nkf_Codec().encode,
+        decode=euc_jp_nkf_Codec().decode,
+        incrementalencoder=euc_jp_nkf_IncrementalEncoder,
+        incrementaldecoder=euc_jp_nkf_IncrementalDecoder,
+        streamreader=euc_jp_nkf_StreamReader,
+        streamwriter=euc_jp_nkf_StreamWriter,
     )
+
+
 regentry_by_encoding['euc_jp_nkf'] = euc_jp_nkf_getregentry()
 
 ## Shift_JIS codecs by NKF
 ## ----------------------------------------------------------------------
 
-import encodings.shift_jis as shift_jis
-
 shift_jis_Codec = _codecs_jp.getcodec('shift_jis')
+
 
 class shift_jis_nkf_Codec(codecs.Codec):
     def encode(self, input, errors='strict'):
@@ -275,16 +304,20 @@ class shift_jis_nkf_Codec(codecs.Codec):
         ret = unicode(ret, 'utf8', 'replace')
         return ret, len(input)
 
+
 class shift_jis_nkf_IncrementalEncoder(shift_jis.IncrementalEncoder):
     codec = shift_jis_Codec
 
+
 class shift_jis_nkf_IncrementalDecoder(shift_jis.IncrementalDecoder):
     codec = shift_jis_Codec
+
 
 class shift_jis_nkf_StreamReader(shift_jis_nkf_Codec, codecs.StreamReader):
     def __init__(self, stream, errors='strict'):
         codecs.StreamReader.__init__(self, stream, errors)
         self.data = ''
+
     def _read(self, func, size):
         if size == 0:
             return u''
@@ -304,10 +337,13 @@ class shift_jis_nkf_StreamReader(shift_jis_nkf_Codec, codecs.StreamReader):
                     break
             data, self.data = data[:p], data[p:]
         return self.decode(data, self.errors)[0]
+
     def read(self, size=-1):
         return self._read(self.stream.read, size)
+
     def readline(self, size=-1):
         return self._read(self.stream.readline, size)
+
     def readlines(self, size=-1):
         data = self._read(self.stream.read, size)
         buffer = []
@@ -318,30 +354,35 @@ class shift_jis_nkf_StreamReader(shift_jis_nkf_Codec, codecs.StreamReader):
                 if end < len(data):
                     buffer.append(data[end:])
                 break
-            buffer.append(data[end:pos+1])
-            end = pos+1
+            buffer.append(data[end:pos + 1])
+            end = pos + 1
         return buffer
+
     def reset(self):
         self.data = ''
+
 
 class shift_jis_nkf_StreamWriter(shift_jis_nkf_Codec, codecs.StreamWriter):
     codec = shift_jis_Codec
 
+
 def shift_jis_nkf_getregentry():
     return codecs.CodecInfo(
-        name =                  'shift_jis_nkf',
-        encode =                shift_jis_nkf_Codec().encode,
-        decode =                shift_jis_nkf_Codec().decode,
-        incrementalencoder =    shift_jis_nkf_IncrementalEncoder,
-        incrementaldecoder =    shift_jis_nkf_IncrementalDecoder,
-        streamreader =          shift_jis_nkf_StreamReader,
-        streamwriter =          shift_jis_nkf_StreamWriter,
+        name='shift_jis_nkf',
+        encode=shift_jis_nkf_Codec().encode,
+        decode=shift_jis_nkf_Codec().decode,
+        incrementalencoder=shift_jis_nkf_IncrementalEncoder,
+        incrementaldecoder=shift_jis_nkf_IncrementalDecoder,
+        streamreader=shift_jis_nkf_StreamReader,
+        streamwriter=shift_jis_nkf_StreamWriter,
     )
+
+
 regentry_by_encoding['shift_jis_nkf'] = shift_jis_nkf_getregentry()
 
-## ----------------------------------------------------------------------
 
 ## Override Japanese codecs by *_nkf
+## ----------------------------------------------------------------------
 
 def overrideEncodings():
     encodings._cache['iso2022_jp'] = iso2022_jp_nkf_getregentry()
@@ -370,13 +411,14 @@ def overrideEncodings():
             if alias2 != alias:
                 encodings._cache[alias2] = encoder
 
+
 ## Test
 ## ======================================================================
 
 if __name__ == '__main__':
     from io import StringIO
 
-    unicoded =  u'abc ABC'
+    unicoded = u'abc ABC'
     unicoded += u' 阿異雨あいう'
     unicoded += u' アイウｱｲｳ'
     unicoded += u' ①ⅰⅠ㈱〜'
@@ -433,4 +475,3 @@ if __name__ == '__main__':
                 assert ostream.getvalue().decode(encoding) == text_unicoded
 
         ## FIXME: Add test for *_Incremental* classes
-
