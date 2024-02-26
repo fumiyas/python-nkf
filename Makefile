@@ -1,6 +1,7 @@
 PYTHON=		python3
 DESTDIR=	/
-SDIST_ARGS=	--formats=bztar --owner=root --group=root
+SDIST_ARGS=	--formats=gztar --owner=root --group=root
+SIGN_ID=	fumiyas@osstech.co.jp
 
 .PHONY: build dist
 
@@ -20,5 +21,4 @@ dist:
 	$(PYTHON) setup.py sdist $(SDIST_ARGS)
 
 upload:
-	$(PYTHON) setup.py sdist $(SDIST_ARGS) upload --sign
-
+	twine upload --repository nkf --sign --identity $(SIGN_ID) dist/*.tar.gz
