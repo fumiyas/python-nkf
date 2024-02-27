@@ -118,11 +118,7 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
   }
 
   *pynkf_optr = 0;
-#if PY_MAJOR_VERSION >= 3
   res = PyBytes_FromString(pynkf_outbuf);
-#else
-  res = PyString_FromString(pynkf_outbuf);
-#endif
   PyMem_Free(pynkf_outbuf);
   return res;
 }
@@ -145,11 +141,8 @@ pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
   kanji_convert(NULL);
 
   codename = get_guessed_code();
-#if PY_MAJOR_VERSION >= 3
+
   res = PyUnicode_FromString(codename);
-#else
-  res = PyString_FromString(codename);
-#endif
   return res;
 }
 
@@ -190,18 +183,11 @@ PyObject *pynkf_guess(PyObject *self, PyObject *args)
 #ifndef EXTERN_NKF
 static PyMethodDef
 nkfMethods[] = {
-#if PY_MAJOR_VERSION >= 3
   {"nkf", pynkf_nkf, METH_VARARGS, ""},
   {"guess", pynkf_guess, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
-#else
-  {"nkf", pynkf_nkf, METH_VARARGS},
-  {"guess", pynkf_guess, METH_VARARGS},
-  {NULL, NULL}
-#endif
 };
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef nkfmodule = {
   PyModuleDef_HEAD_INIT,
   "nkf",
@@ -213,15 +199,7 @@ static struct PyModuleDef nkfmodule = {
 /* Module initialization function */
 PyMODINIT_FUNC
 PyInit_nkf(void)
-#else
-void
-initnkf(void)
-#endif
 {
-#if PY_MAJOR_VERSION >= 3
   return PyModule_Create(&nkfmodule);
-#else
-  Py_InitModule("nkf", nkfMethods);
-#endif
 }
 #endif
