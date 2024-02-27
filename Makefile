@@ -21,6 +21,7 @@ clean:
 
 .PHONY: dist
 dist:
+	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct` \
 	$(PYTHON) setup.py sdist $(SDIST_ARGS)
 
 .PHONY: dist-check
