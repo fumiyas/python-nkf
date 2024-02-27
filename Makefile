@@ -26,12 +26,12 @@ dist:
 
 .PHONY: dist-check
 dist-check:
-	twine check dist/*
+	$(PYTHON) -m twine check dist/*
 
 .PHONY: dist-upload
 dist-upload:
-	twine upload --repository nkf $(UPLOAD_ARGS)
+	$(PYTHON) -m twine upload --repository nkf $(UPLOAD_ARGS)
 
 .PHONY: dist-upload-test
 dist-upload-test:
-	twine upload --repository nkf-test $(UPLOAD_ARGS)
+	$(PYTHON) -m twine upload --repository nkf-test $(UPLOAD_ARGS)
