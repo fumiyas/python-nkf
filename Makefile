@@ -1,7 +1,7 @@
 PYTHON=		python3
 DESTDIR=	/
 SDIST_ARGS=	--formats=gztar --owner=root --group=root
-SIGN_ID=	fumiyas@osstech.co.jp
+UPLOAD_ARGS= 	dist/*.tar.gz
 
 .PHONY: default
 default: build
@@ -30,4 +30,4 @@ dist-check:
 
 .PHONY: dist-upload
 dist-upload:
-	twine upload --repository nkf --sign --identity $(SIGN_ID) dist/*.tar.gz
+	twine upload --repository nkf $(UPLOAD_ARGS)
