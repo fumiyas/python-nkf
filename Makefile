@@ -17,7 +17,7 @@ install:
 .PHONY: clean
 clean:
 	$(PYTHON) setup.py clean --all
-	rm -rf MANIFEST dist *.pyc
+	rm -rf MANIFEST dist __pycache__ *.egg-info
 
 .PHONY: dist
 dist:
