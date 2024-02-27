@@ -31,3 +31,7 @@ dist-check:
 .PHONY: dist-upload
 dist-upload:
 	twine upload --repository nkf $(UPLOAD_ARGS)
+
+.PHONY: dist-upload-test
+dist-upload-test:
+	twine upload --repository nkf-test $(UPLOAD_ARGS)
