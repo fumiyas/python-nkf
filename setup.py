@@ -69,7 +69,7 @@ if timestamp is not None:
 
 setup(
     name="nkf",
-    version="1.0.0",
+    version="1.0.1",
     description="Python Interface to NKF",
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",

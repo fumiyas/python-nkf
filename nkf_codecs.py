@@ -42,7 +42,7 @@
 ##
 ## FIXME: All of *_StreamReader.read*(size) ignore the size in some cases.
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import nkf
 import codecs
