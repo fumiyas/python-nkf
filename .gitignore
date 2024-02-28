@@ -1,5 +1,9 @@
-MANIFEST
+.pdm-build
+.pdm-python
+pdm.lock
+__pycache__
 build
 dist
-*.pyc
-*.egg-info
+src/**/*/_version.py
+src/**/*.so
+src/*.egg-info

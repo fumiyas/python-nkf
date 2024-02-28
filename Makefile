@@ -1,41 +1,53 @@
 PYTHON=		python3
-DESTDIR=	/
-UPLOAD_ARGS= 	dist/*.tar.gz
+BUILD=		$(PYTHON) -m build
+PDM=		$(PYTHON) -m pdm
+TWINE=		$(PYTHON) -m twine
+
+VERSION=	$(shell $(PDM) show --version)
+
+DIST_ENV=	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct`
+DIST_FILES= 	dist/*-$(VERSION).tar.gz
 
 .PHONY: default
-default: build
-
-.PHONY: build check
-build check:
-	$(PYTHON) setup.py $@
-
-.PHONY: install
-install:
-	$(PYTHON) setup.py install --root $(DESTDIR)
+default: dist
 
 .PHONY: clean
 clean:
-	$(PYTHON) setup.py clean --all
-	rm -rf MANIFEST dist __pycache__ *.egg-info
+	$(RM) -r .venv .pdm-* .pytest* __pycache__ build dist pdm.lock src/*/_version.py src/*.egg-info
+	find src tests -name __pycache__ -exec $(RM) -r {} +
+	find src -name "*.so" -exec $(RM) {} +
 
-.PHONY: sdist dist
-sdist dist:
-	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct` \
-	$(PYTHON) -m build --sdist .
+.PHONY: test
+test:
+	$(PDM) install
+	$(PDM) run pytest
+	
+## ======================================================================
 
-.PHONY: bdist wheels
-bdist wheels:
-	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct` \
-	$(PYTHON) -m build --wheel .
+.PHONY: dist
+dist:
+	$(BUILD) .
+
+.PHONY: dist-source
+dist-source:
+	$(DIST_ENV) \
+	$(BUILD) --sdist .
+
+.PHONY: dist-wheel
+dist-wheel:
+	$(DIST_ENV) \
+	$(BUILD) --wheel .
 
 .PHONY: dist-check
 dist-check:
-	$(PYTHON) -m twine check dist/*
+	$(TWINE) check --strict dist/*
 
 .PHONY: dist-upload
 dist-upload:
-	$(PYTHON) -m twine upload --repository nkf $(UPLOAD_ARGS)
+	$(RM) dist/*.whl
+	$(PDM) publish --no-build --repository pypi-nkf
 
 .PHONY: dist-upload-test
 dist-upload-test:
-	$(PYTHON) -m twine upload --repository nkf-test $(UPLOAD_ARGS)
+	$(RM) dist/*.whl
+	$(PDM) publish --no-build --repository test-pypi-nkf

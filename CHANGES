@@ -1,3 +1,9 @@
+Python-NKF 1.0.3 (2024-03-07)
+
+  * Development: Migrate to PDM and PDM-Backend
+  * Rename to nkf.codecs module from nkf_codecs
+  * Require Python 3.9
+
 Python-NKF 1.0.2 (2024-02-28)
 
   * nkf 2.1.5

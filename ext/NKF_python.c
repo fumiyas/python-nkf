@@ -80,8 +80,8 @@ pynkf_putchar(int c)
 }
 
 #define PERL_XS 1
-#include "nkf-dist/utf8tbl.c"
-#include "nkf-dist/nkf.c"
+#include "nkf/utf8tbl.c"
+#include "nkf/nkf.c"
 
 static PyObject *
 pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t optslen)
@@ -198,7 +198,7 @@ static struct PyModuleDef nkfmodule = {
 
 /* Module initialization function */
 PyMODINIT_FUNC
-PyInit_nkf(void)
+PyInit__nkf(void)
 {
   return PyModule_Create(&nkfmodule);
 }

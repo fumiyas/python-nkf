@@ -42,8 +42,6 @@
 ##
 ## FIXME: All of *_StreamReader.read*(size) ignore the size in some cases.
 
-__version__ = '1.0.2'
-
 import nkf
 import codecs
 import _codecs_iso2022
@@ -413,68 +411,3 @@ def overrideEncodings():
             alias2 = re.sub('_', '-', alias)
             if alias2 != alias:
                 encodings._cache[alias2] = encoder
-
-
-## Test
-## ======================================================================
-
-if __name__ == '__main__':
-    import io
-
-    unicoded = u'abc ABC'
-    unicoded += u' 阿異雨あいう'
-    unicoded += u' アイウｱｲｳ'
-    unicoded += u' ①ⅰⅠ㈱〜'
-    unicoded += u' =?ISO-2022-JP?B?GyRCJCIbKEI=?='
-
-    encoding_list = [
-        'iso2022_jp',
-        'iso2022-jp',
-        'iso2022jp',
-        'iso_2022_jp',
-        'iso-2022-jp',
-        'euc_jp',
-        'euc-jp',
-        'eucjp',
-        'ujis',
-        'u_jis',
-        'u-jis',
-        'shift_jis',
-        'shift-jis',
-        'shiftjis',
-        'sjis',
-        's-jis',
-    ]
-
-    overrideEncodings()
-
-    for encoding in encoding_list:
-        print('%s: encode(), decode()' % encoding)
-        encoded = unicoded.encode(encoding)
-        assert encoded.decode(encoding) == unicoded
-
-        text = (encoded + b'\n') * 17
-        text_unicoded = text.decode(encoding)
-        encoder, decoder, reader, writer = codecs.lookup(encoding)
-        for func_name in ['read', 'readline', 'readlines']:
-            for size in [None, -1] + list(range(1, 33)) + [64, 128, 256, 512, 1024]:
-                print('%s: %s(%s)' % (encoding, func_name, str(size)))
-
-                istream = reader(io.BytesIO(text))
-                ostream = writer(io.BytesIO())
-                func = getattr(istream, func_name)
-
-                while 1:
-                    text_chunk = func(size)
-                    if not text_chunk:
-                        break
-                    ## FIXME: Fix *_StreamReader classes
-                    #if size != None and size > 0:
-                    #    assert len(text_chunk) <= size
-                    if func_name == 'readlines':
-                        ostream.writelines(text_chunk)
-                    else:
-                        ostream.write(text_chunk)
-                assert ostream.getvalue().decode(encoding) == text_unicoded
-
-        ## FIXME: Add test for *_Incremental* classes

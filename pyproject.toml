@@ -1,0 +1,40 @@
+[project]
+name = "nkf"
+dynamic = ["version"]
+description = "Python Interface to NKF"
+authors = [
+    {name = "SATOH Fumiyasu", email = "fumiyas@osstech.co.jp"},
+]
+license = {text = "BSD-3-Clause"}
+dependencies = []
+requires-python = ">=3.9"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/fumiyas/python-nkf"
+Downloads = "https://pypi.org/project/nkf/"
+
+[build-system]
+build-backend = "pdm.backend"
+requires = ["pdm-backend", "setuptools"]
+
+[tool.pdm.build]
+run-setuptools = true
+source-includes = [
+  "CHANGES",
+  "ext/",
+  "tests/",
+]
+excludes = [
+  "src/**/*.so",
+]
+
+[tool.pdm.version]
+source = "scm"
+write_to = "nkf/_version.py"
+write_template = "__version__ = '{}'"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest",
+]
