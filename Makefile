@@ -1,6 +1,5 @@
 PYTHON=		python3
 DESTDIR=	/
-SDIST_ARGS=	--formats=gztar --owner=root --group=root
 UPLOAD_ARGS= 	dist/*.tar.gz
 
 .PHONY: default
@@ -19,10 +18,15 @@ clean:
 	$(PYTHON) setup.py clean --all
 	rm -rf MANIFEST dist __pycache__ *.egg-info
 
-.PHONY: dist
-dist:
+.PHONY: sdist dist
+sdist dist:
 	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct` \
-	$(PYTHON) setup.py sdist $(SDIST_ARGS)
+	$(PYTHON) -m build --sdist .
+
+.PHONY: bdist wheels
+bdist wheels:
+	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct` \
+	$(PYTHON) -m build --wheel .
 
 .PHONY: dist-check
 dist-check:
