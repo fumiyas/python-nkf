@@ -1,4 +1,4 @@
-Python Interface to NKF
+Python Interface to NKF (Network Kanji Filter)
 ======================================================================
 
 * Copyright (c) 2012-2024 SATOH Fumiyasu @ OSSTech Corp., Japan
