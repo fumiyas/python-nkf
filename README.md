@@ -41,17 +41,16 @@ input_encoding = nkf.guess('some string')
 `guess()` function guesses an input string encoding and returns
 one of next strings:
 
-  * `BINARY`
-  * `ASCII`
-  * `Shift_JIS`
-  * `CP932`
-  * `EUC-JP`
-  * `EUCJP-MS`
-  * `CP51932`
-  * `ISO-2022-JP`
-  * `CP50221`
-  * `CP50220`
-  * `UTF-8`
-  * `UTF-16`
-  * `UTF-32`
-
+* `BINARY`
+* `ASCII`
+* `Shift_JIS`
+* `CP932`
+* `EUC-JP`
+* `EUCJP-MS`
+* `CP51932`
+* `ISO-2022-JP`
+* `CP50221`
+* `CP50220`
+* `UTF-8`
+* `UTF-16`
+* `UTF-32`
