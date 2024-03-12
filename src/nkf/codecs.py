@@ -96,13 +96,10 @@ iso2022_jp_Codec = _codecs_iso2022.getcodec('iso2022_jp')
 
 class iso2022_jp_nkf_Codec(codecs.Codec):
     def encode(self, s, errors='strict'):
-        b = s.encode('UTF-8', 'replace')
-        b = nkf.nkf('-m0 -x -W -j', b)
+        b = nkf.nkf('-m0 -x -W -j', s)
         return (b, len(s))
 
     def decode(self, b, errors='strict'):
-        if isinstance(b, memoryview):
-            b = b.tobytes()
         s = nkf.nkf('-m0 -x -J -w', b).decode('UTF-8', 'replace')
         return s, len(b)
 
@@ -198,13 +195,10 @@ euc_jp_Codec = _codecs_jp.getcodec('euc_jp')
 
 class euc_jp_nkf_Codec(codecs.Codec):
     def encode(self, s, errors='strict'):
-        b = s.encode('UTF-8', 'replace')
-        b = nkf.nkf('-m0 -x -W -e', b)
+        b = nkf.nkf('-m0 -x -W -e', s)
         return (b, len(s))
 
     def decode(self, b, errors='strict'):
-        if isinstance(b, memoryview):
-            b = b.tobytes()
         s = nkf.nkf('-m0 -x -E -w', b).decode('UTF-8', 'replace')
         return s, len(b)
 
@@ -292,13 +286,10 @@ shift_jis_Codec = _codecs_jp.getcodec('shift_jis')
 
 class shift_jis_nkf_Codec(codecs.Codec):
     def encode(self, s, errors='strict'):
-        b = s.encode('UTF-8', 'replace')
-        b = nkf.nkf('-m0 -x -W -s', b)
+        b = nkf.nkf('-m0 -x -W -s', s)
         return (b, len(s))
 
     def decode(self, b, errors='strict'):
-        if isinstance(b, memoryview):
-            b = b.tobytes()
         s = nkf.nkf('-m0 -x -S -w', b).decode('UTF-8', 'replace')
         return s, len(b)
 
