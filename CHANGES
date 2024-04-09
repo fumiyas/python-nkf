@@ -1,3 +1,7 @@
+Python-NKF 1.0.4 (2024-04-09)
+
+  * nkf.codecs: Do not raise AttributeError for unknown encodings
+
 Python-NKF 1.0.3 (2024-03-07)
 
   * Development: Migrate to PDM and PDM-Backend
