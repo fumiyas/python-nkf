@@ -59,10 +59,7 @@ regentry_by_encoding = {}
 
 
 def nkf_codec_search_func(encoding):
-    if regentry_by_encoding.has_key(encoding):
-        return regentry_by_encoding[encoding]
-    else:
-        return None
+    return regentry_by_encoding.get(encoding)
 
 
 codecs.register(nkf_codec_search_func)
