@@ -8,6 +8,10 @@ VERSION=	$(shell $(PDM) show --version)
 DIST_ENV=	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct`
 DIST_FILES= 	dist/*-$(VERSION).tar.gz
 
+-include Makefile.local
+
+## ======================================================================
+
 .PHONY: default
 default: dist
 

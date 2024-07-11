@@ -2,6 +2,7 @@
 .pdm-python
 pdm.lock
 __pycache__
+Makefile.local
 build
 dist
 src/**/*/_version.py
