@@ -31,6 +31,7 @@ test:
 
 .PHONY: dist
 dist:
+	$(DIST_ENV) \
 	$(BUILD) .
 
 .PHONY: dist-source
