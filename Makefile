@@ -1,12 +1,13 @@
-PYTHON=		python3
-BUILD=		$(PYTHON) -m build
-PDM=		$(PYTHON) -m pdm
-TWINE=		$(PYTHON) -m twine
+PYTHON=			python3
+BUILD=			$(PYTHON) -m build
+PDM=			$(PYTHON) -m pdm
+TWINE=			$(PYTHON) -m twine
 
-VERSION=	$(shell $(PDM) show --version)
+VERSION=		$(shell $(PDM) show --version)
+SOURCE_DATE_EPOCH=	$(shell git log -1 --pretty=%ct)
 
-DIST_ENV=	SOURCE_DATE_EPOCH=`git log -1 --pretty=%ct`
-DIST_FILES= 	dist/*-$(VERSION).tar.gz
+DIST_ENV=		SOURCE_DATE_EPOCH="$(SOURCE_DATE_EPOCH)"
+DIST_FILES= 		dist/*-$(VERSION).tar.gz
 
 -include Makefile.local
 
