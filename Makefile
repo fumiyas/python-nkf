@@ -7,7 +7,6 @@ VERSION=		$(shell $(PDM) show --version)
 SOURCE_DATE_EPOCH=	$(shell git log -1 --pretty=%ct)
 
 DIST_ENV=		SOURCE_DATE_EPOCH="$(SOURCE_DATE_EPOCH)"
-DIST_FILES= 		dist/*-$(VERSION).tar.gz
 
 -include Makefile.local
 
