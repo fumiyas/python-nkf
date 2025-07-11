@@ -32,7 +32,7 @@ excludes = [
 [tool.pdm.version]
 source = "scm"
 write_to = "nkf/_version.py"
-write_template = "__version__ = '{}'"
+write_template = "__version__ = '{}'\n"
 
 [tool.pdm.dev-dependencies]
 test = [
