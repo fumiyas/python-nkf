@@ -1,6 +1,6 @@
 ## -*- coding: utf-8 -*- vim:shiftwidth=4:expandtab:
 
-from ._version import __version__
 from ._nkf import *
+from importlib.metadata import version
 
-VERSION = __version__
+__version__ = version("nkf")
