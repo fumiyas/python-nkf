@@ -141,7 +141,7 @@ class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
             if not match:
                 raise UnicodeError("unknown designation")
             self.charset = CHARSETS[match.group()]
-            if self.charset in [JISX0208_1978, JISX0208_1983, JISX0212_1990] and \
+            if self.charset in (JISX0208_1978, JISX0208_1983, JISX0212_1990) and \
                (len(data) - pos - match.end()) % 2 == 1:
                 data, self.data = data[:-1], data[-1:]
             if self.charset != US_ASCII:
@@ -158,7 +158,7 @@ class iso2022_jp_nkf_StreamReader(iso2022_jp_nkf_Codec, codecs.StreamReader):
         data = self._read(self.stream.read, size)
         buffer = []
         end = 0
-        while 1:
+        while True:
             pos = data.find(u'\n', end)
             if pos < 0:
                 if end < len(data):
@@ -252,7 +252,7 @@ class euc_jp_nkf_StreamReader(euc_jp_nkf_Codec, codecs.StreamReader):
         data = self._read(self.stream.read, size)
         buffer = []
         end = 0
-        while 1:
+        while True:
             pos = data.find(u'\n', end)
             if pos < 0:
                 if end < len(data):
@@ -346,7 +346,7 @@ class shift_jis_nkf_StreamReader(shift_jis_nkf_Codec, codecs.StreamReader):
         data = self._read(self.stream.read, size)
         buffer = []
         end = 0
-        while 1:
+        while True:
             pos = data.find(u'\n', end)
             if pos < 0:
                 if end < len(data):
