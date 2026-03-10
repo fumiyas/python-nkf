@@ -382,7 +382,7 @@ regentry_by_encoding['shift_jis_nkf'] = shift_jis_nkf_getregentry()
 ## Override Japanese codecs by *_nkf
 ## ----------------------------------------------------------------------
 
-def overrideEncodings():
+def override_encodings():
     encodings._cache['iso2022_jp'] = iso2022_jp_nkf_getregentry()
     encodings._cache['euc_jp'] = euc_jp_nkf_getregentry()
     encodings._cache['shift_jis'] = shift_jis_nkf_getregentry()
@@ -408,3 +408,5 @@ def overrideEncodings():
             alias2 = re.sub('_', '-', alias)
             if alias2 != alias:
                 encodings._cache[alias2] = encoder
+
+overrideEncodings = override_encodings
