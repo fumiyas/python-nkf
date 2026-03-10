@@ -397,7 +397,7 @@ def override_encodings():
             encoder = regentry_by_encoding['shift_jis_nkf']
         if encoder:
             encodings._cache[alias] = encoder
-            alias2 = re.sub('_', '-', alias)
+            alias2 = alias.replace('_', '-')
             if alias2 != alias:
                 encodings._cache[alias2] = encoder
 
