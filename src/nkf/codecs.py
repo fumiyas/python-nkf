@@ -383,26 +383,18 @@ regentry_by_encoding['shift_jis_nkf'] = shift_jis_nkf_getregentry()
 ## ----------------------------------------------------------------------
 
 def override_encodings():
-    encodings._cache['iso2022_jp'] = iso2022_jp_nkf_getregentry()
-    encodings._cache['euc_jp'] = euc_jp_nkf_getregentry()
-    encodings._cache['shift_jis'] = shift_jis_nkf_getregentry()
-
-    ## 'iso2022_jp' and 'iso2022-jp' are not in aliases
-    encodings._cache['iso2022-jp'] = iso2022_jp_nkf_getregentry()
-    ## 'euc_jp' and 'euc-jp' are not in aliases
-    encodings._cache['euc-jp'] = euc_jp_nkf_getregentry()
-    ## 'euc_jp' and 'euc-jp' are not in aliases
-    encodings._cache['shift-jis'] = shift_jis_nkf_getregentry()
+    encodings._cache['euc_jp'] = encodings._cache['euc_jp_ms'] = regentry_by_encoding['euc_jp_nkf']
+    encodings._cache['shift_jis'] = regentry_by_encoding['shift_jis_nkf']
 
     ## Override aliases for Japanese codecs by *_nkf
     for alias in encodings.aliases.aliases:
         encoder = None
         if re.match(r'^iso_?2022_?jp(_?(1|ext))?$', alias):
-            encoder = iso2022_jp_nkf_getregentry()
+            encoder = regentry_by_encoding['iso2022_jp_nkf']
         elif re.match(r'^(euc_?jp|u_?jis)$', alias):
-            encoder = euc_jp_nkf_getregentry()
+            encoder = regentry_by_encoding['euc_jp_nkf']
         elif re.match(r'^s(hift)?_?jis$', alias):
-            encoder = shift_jis_nkf_getregentry()
+            encoder = regentry_by_encoding['shift_jis_nkf']
         if encoder:
             encodings._cache[alias] = encoder
             alias2 = re.sub('_', '-', alias)
