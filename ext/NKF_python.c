@@ -84,11 +84,11 @@ pynkf_putchar(int c)
 #include "nkf/nkf.c"
 
 static PyObject *
-pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t optslen)
+pynkf_convert(const Py_buffer *src, const char *opts)
 {
   PyObject * res;
 
-  pynkf_ibufsize = strlen + 1;
+  pynkf_ibufsize = src->len;
   pynkf_obufsize = pynkf_ibufsize * 1.5 + 256;
   pynkf_outbuf = (unsigned char *)PyMem_Malloc(pynkf_obufsize);
   if (pynkf_outbuf == NULL){
@@ -99,7 +99,7 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
   pynkf_ocount = pynkf_obufsize;
   pynkf_optr = pynkf_outbuf;
   pynkf_icount = 0;
-  pynkf_inbuf  = str;
+  pynkf_inbuf  = src->buf;
   pynkf_iptr = pynkf_inbuf;
   pynkf_guess_flag = 0;
 
@@ -120,18 +120,18 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
   *pynkf_optr = 0;
   res = PyBytes_FromString(pynkf_outbuf);
   PyMem_Free(pynkf_outbuf);
+
   return res;
 }
 
 static PyObject *
-pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
+pynkf_convert_guess(const Py_buffer *src)
 {
-  PyObject * res;
   const char *codename;
 
-  pynkf_ibufsize = strlen + 1;
+  pynkf_ibufsize = src->len;
   pynkf_icount = 0;
-  pynkf_inbuf  = str;
+  pynkf_inbuf  = src->buf;
   pynkf_iptr = pynkf_inbuf;
 
   pynkf_guess_flag = 1;
@@ -142,8 +142,7 @@ pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
 
   codename = get_guessed_code();
 
-  res = PyUnicode_FromString(codename);
-  return res;
+  return PyUnicode_FromString(codename);
 }
 
 #ifndef EXTERN_NKF
@@ -151,16 +150,17 @@ static
 #endif
 PyObject *pynkf_nkf(PyObject *self, PyObject *args)
 {
-  unsigned char *str;
-  Py_ssize_t strlen;
-  char *opts;
-  Py_ssize_t optslen;
-  PyObject* res;
+  Py_buffer src;
+  const char *opts;
+  PyObject *res;
 
-  if (!PyArg_ParseTuple(args, "s#s#", &opts, &optslen, &str, &strlen)) {
+  if (!PyArg_ParseTuple(args, "ss*", &opts, &src)) {
     return NULL;
   }
-  res = pynkf_convert(str, strlen, opts, optslen);
+
+  res = pynkf_convert(&src, opts);
+  PyBuffer_Release(&src);
+
   return res;
 }
 
@@ -169,14 +169,16 @@ static
 #endif
 PyObject *pynkf_guess(PyObject *self, PyObject *args)
 {
-  unsigned char *str;
-  Py_ssize_t strlen;
-  PyObject* res;
+  Py_buffer src;
+  PyObject *res;
 
-  if (!PyArg_ParseTuple(args, "s#", &str, &strlen)) {
+  if (!PyArg_ParseTuple(args, "s*", &src)) {
     return NULL;
   }
-  res = pynkf_convert_guess(str, strlen);
+
+  res = pynkf_convert_guess(&src);
+  PyBuffer_Release(&src);
+
   return res;
 }
 
