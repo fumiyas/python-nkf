@@ -383,6 +383,7 @@ regentry_by_encoding['shift_jis_nkf'] = shift_jis_nkf_getregentry()
 ## ----------------------------------------------------------------------
 
 def override_encodings():
+    encodings._cache['iso2022_jp'] = encodings._cache['iso2022-jp'] = regentry_by_encoding['iso2022_jp_nkf']
     encodings._cache['euc_jp'] = encodings._cache['euc_jp_ms'] = regentry_by_encoding['euc_jp_nkf']
     encodings._cache['shift_jis'] = regentry_by_encoding['shift_jis_nkf']
 
