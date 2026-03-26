@@ -1,7 +1,6 @@
 UV=			uv
 UVX=			uvx
-TOX=			UV_PYTHON_PREFERENCE=managed $(UV) run tox
-TEST_PYTHONS=		3.10 3.11 3.12 3.13 3.14
+TOX=			$(UV) run tox
 SOURCE_DATE_EPOCH=	$(shell git log -1 --pretty=%ct)
 
 DIST_ENV=		SOURCE_DATE_EPOCH="$(SOURCE_DATE_EPOCH)"
@@ -22,7 +21,6 @@ clean:
 .PHONY: test
 test:
 	$(UV) sync --group dev
-	$(UV) python install $(TEST_PYTHONS)
 	$(TOX)
 	
 ## ======================================================================
