@@ -5,7 +5,7 @@ description = "Python Interface to NKF"
 authors = [
     {name = "SATOH Fumiyasu", email = "fumiyas@osstech.co.jp"},
 ]
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
 dependencies = []
 requires-python = ">=3.10"
 readme = "README.md"
@@ -15,24 +15,29 @@ Homepage = "https://github.com/fumiyas/python-nkf"
 Downloads = "https://pypi.org/project/nkf/"
 
 [build-system]
-build-backend = "pdm.backend"
-requires = ["pdm-backend", "setuptools"]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77", "setuptools-scm[toml]>=8"]
 
-[tool.pdm.build]
-run-setuptools = true
-source-includes = [
-  "CHANGES",
-  "ext/",
-  "tests/",
-]
-excludes = [
-  "src/**/*.so",
-]
-
-[tool.pdm.version]
-source = "scm"
-
-[tool.pdm.dev-dependencies]
-test = [
+[dependency-groups]
+dev = [
     "pytest",
+    "tox-uv>=1.33",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+
+[[tool.uv.index]]
+name = "pypi-nkf"
+url = "https://pypi.org/simple"
+publish-url = "https://upload.pypi.org/legacy/"
+
+[[tool.uv.index]]
+name = "test-pypi-nkf"
+url = "https://test.pypi.org/simple"
+publish-url = "https://test.pypi.org/legacy/"

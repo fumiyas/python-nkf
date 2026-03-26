@@ -23,6 +23,15 @@ $ make
 $ sudo make install
 ```
 
+Run tests:
+
+```console
+$ make test
+```
+
+This uses `tox` and prepares Python 3.10 through 3.14 via `uv python install`.
+The tox environments themselves are managed through `tox-uv`.
+
 Usage
 ----------------------------------------------------------------------
 

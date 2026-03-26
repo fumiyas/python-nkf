@@ -1,10 +1,6 @@
-.pdm-build
-.pdm-python
-pdm.lock
-__pycache__
 Makefile.local
-build
+__pycache__
 dist
-src/**/*/_version.py
+uv.lock
 src/**/*.so
 src/*.egg-info

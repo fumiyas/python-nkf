@@ -1,0 +1,4 @@
+include CHANGES
+recursive-include ext *
+recursive-include tests *
+prune **/__pycache__
