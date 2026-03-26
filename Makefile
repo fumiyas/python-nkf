@@ -15,7 +15,7 @@ default: dist
 
 .PHONY: clean
 clean:
-	$(RM) -r .tox .venv .pdm-* .pytest* __pycache__ build dist pdm.lock uv.lock src/*/_version.py src/*.egg-info
+	$(RM) -r .tox .venv dist uv.lock src/*.egg-info
 	find src tests -name __pycache__ -exec $(RM) -r {} +
 	find src -name "*.so" -exec $(RM) {} +
 
