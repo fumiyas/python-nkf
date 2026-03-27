@@ -30,14 +30,8 @@
 
 /* Compatibility definitions */
 
-#ifdef nkf_char
-#elif defined(INT_IS_SHORT)
-typedef long nkf_char;
-#define NKF_INT32_C(n)   (n##L)
-#else
 typedef int nkf_char;
 #define NKF_INT32_C(n)   (n)
-#endif
 
 #if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || (defined(__WATCOMC__) && defined(__386__) && !defined(__LINUX__)) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
 #define MSDOS

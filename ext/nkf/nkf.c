@@ -320,11 +320,7 @@ struct {
 #define nkf_byte_jisx0201_katakana_p(c) (SP <= c && c <= 0x5F)
 
 #define         HOLD_SIZE       1024
-#if defined(INT_IS_SHORT)
-#define         IOBUF_SIZE      2048
-#else
 #define         IOBUF_SIZE      16384
-#endif
 
 #define         DEFAULT_J       'B'
 #define         DEFAULT_R       'B'
@@ -628,11 +624,6 @@ nkf_locale_charmap(void)
     sprintf(buf, "CP%d", GetACP());
     return buf;
 #elif defined(__OS2__)
-# if defined(INT_IS_SHORT)
-    /* OS/2 1.x */
-    return NULL;
-# else
-    /* OS/2 32bit */
     static char buf[16];
     ULONG ulCP[1], ulncp;
     DosQueryCp(sizeof(ulCP), ulCP, &ulncp);
@@ -641,7 +632,6 @@ nkf_locale_charmap(void)
     else
         sprintf(buf, "CP%lu", ulCP[0]);
     return buf;
-# endif
 #endif
     return NULL;
 }
