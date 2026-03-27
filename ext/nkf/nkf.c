@@ -629,6 +629,16 @@ static int module_connection(nkf_context *ctx);
 static int kanji_convert(nkf_context *ctx);
 static int options(nkf_context *ctx, unsigned char *cp);
 static const char *get_guessed_code(nkf_context *ctx);
+static void e_status(nkf_context *ctx, struct input_code *ptr, nkf_char c);
+static void s_status(nkf_context *ctx, struct input_code *ptr, nkf_char c);
+static nkf_char e_iconv(nkf_context *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
+static nkf_char s_iconv(nkf_context *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
+#ifdef UTF8_INPUT_ENABLE
+static void w_status(nkf_context *ctx, struct input_code *ptr, nkf_char c);
+static nkf_char w_iconv(nkf_context *ctx, nkf_char c1, nkf_char c2, nkf_char c3);
+static nkf_char w_iconv16(nkf_context *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
+static nkf_char w_iconv32(nkf_context *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
+#endif
 
 /* === Context lifecycle functions === */
 
@@ -662,11 +672,39 @@ nkf_context_free(nkf_context *ctx)
 void
 nkf_context_init(nkf_context *ctx)
 {
+    int idx = 0;
     nkf_buf_clear(ctx->std_gc_buf);
     nkf_buf_clear(ctx->broken_buf);
     nkf_buf_clear(ctx->nfc_buf);
     ctx->broken_state = 0;
     ctx->mimeout_b64_state = 0;
+
+    /* Initialize input_code_list (was static initializer in original) */
+    memset(input_code_list, 0, sizeof(input_code_list));
+    input_code_list[idx].name = "EUC-JP";
+    input_code_list[idx].status_func = e_status;
+    input_code_list[idx].iconv_func = e_iconv;
+    idx++;
+    input_code_list[idx].name = "Shift_JIS";
+    input_code_list[idx].status_func = s_status;
+    input_code_list[idx].iconv_func = s_iconv;
+    idx++;
+#ifdef UTF8_INPUT_ENABLE
+    input_code_list[idx].name = "UTF-8";
+    input_code_list[idx].status_func = w_status;
+    input_code_list[idx].iconv_func = w_iconv;
+    idx++;
+    input_code_list[idx].name = "UTF-16";
+    input_code_list[idx].status_func = NULL;
+    input_code_list[idx].iconv_func = w_iconv16;
+    idx++;
+    input_code_list[idx].name = "UTF-32";
+    input_code_list[idx].status_func = NULL;
+    input_code_list[idx].iconv_func = w_iconv32;
+    idx++;
+#endif
+    /* Sentinel entry (name == NULL) */
+
     reinit(ctx);
 }
 
@@ -739,6 +777,33 @@ nkf_guess(nkf_context *ctx)
     kanji_convert(ctx);
     return ctx->error_code;
 }
+
+/* Encoding utility functions (public API, wrapping internal macros) */
+#undef nkf_enc_name
+const char *
+nkf_enc_name(nkf_encoding *enc)
+{
+    return enc->name;
+}
+
+#undef nkf_enc_to_index
+int
+nkf_enc_to_index(nkf_encoding *enc)
+{
+    return enc->id;
+}
+
+#undef nkf_enc_to_base_encoding
+nkf_native_encoding *
+nkf_enc_to_base_encoding(nkf_encoding *enc)
+{
+    return enc->base_encoding;
+}
+
+/* Re-define as macros for internal use below this point */
+#define nkf_enc_name(enc) (enc)->name
+#define nkf_enc_to_index(enc) (enc)->id
+#define nkf_enc_to_base_encoding(enc) (enc)->base_encoding
 
 #ifndef PERL_XS
 #ifdef WIN32DLL

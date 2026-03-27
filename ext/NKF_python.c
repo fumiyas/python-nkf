@@ -16,176 +16,190 @@
 #define PY_SSIZE_T_CLEAN
 
 #include "Python.h"
-#include <setjmp.h>
+#include "nkf/nkf.h"
 
-#undef getc
-#undef ungetc
-#define getc(f)         pynkf_getc(f)
-#define ungetc(c,f)     pynkf_ungetc(c,f)
-
-#undef putchar
-#undef TRUE
-#undef FALSE
-#define putchar(c)      pynkf_putchar(c)
-
-static Py_ssize_t pynkf_ibufsize, pynkf_obufsize;
-static unsigned char *pynkf_inbuf, *pynkf_outbuf;
-static int pynkf_icount,pynkf_ocount;
-static unsigned char *pynkf_iptr, *pynkf_optr;
-static jmp_buf env;
-static int pynkf_guess_flag;
+/* Per-call I/O state, passed as userdata to NKF I/O callbacks. */
+typedef struct {
+  unsigned char *inbuf;
+  Py_ssize_t inbuf_size;
+  Py_ssize_t in_pos;
+  unsigned char *outbuf;
+  Py_ssize_t outbuf_size;
+  Py_ssize_t out_pos;
+  int suppress_output;  /* non-zero for guess mode */
+  int oom;              /* set on realloc failure */
+} pynkf_io_t;
 
 static int
-pynkf_getc(FILE *f)
+pynkf_io_getc(void *userdata)
 {
-  unsigned char c;
-  if (pynkf_icount >= pynkf_ibufsize) return EOF;
-  c = *pynkf_iptr++;
-  pynkf_icount++;
-  return (int)c;
+  pynkf_io_t *io = (pynkf_io_t *)userdata;
+  if (io->in_pos >= io->inbuf_size) return EOF;
+  return (int)io->inbuf[io->in_pos++];
 }
 
 static int
-pynkf_ungetc(int c, FILE *f)
+pynkf_io_ungetc(void *userdata, int c)
 {
-  if (pynkf_icount--){
-    *(--pynkf_iptr) = c;
-    return c;
-  }else{ return EOF; }
+  pynkf_io_t *io = (pynkf_io_t *)userdata;
+  if (io->in_pos <= 0) return EOF;
+  io->inbuf[--io->in_pos] = (unsigned char)c;
+  return c;
 }
 
 static void
-pynkf_putchar(int c)
+pynkf_io_putc(void *userdata, int c)
 {
-  Py_ssize_t size;
-  unsigned char *p;
+  pynkf_io_t *io = (pynkf_io_t *)userdata;
 
-  if (pynkf_guess_flag) {
-    return;
-  }
+  if (io->suppress_output || io->oom) return;
 
-  if (pynkf_ocount--){
-    *pynkf_optr++ = c;
-  }else{
-    size = pynkf_obufsize + pynkf_obufsize;
-    p = (unsigned char *)PyMem_Realloc(pynkf_outbuf, size + 1);
-    if (pynkf_outbuf == NULL){ longjmp(env, 1); }
-    pynkf_outbuf = p;
-    pynkf_optr = pynkf_outbuf + pynkf_obufsize;
-    pynkf_ocount = pynkf_obufsize;
-    pynkf_obufsize = size;
-    *pynkf_optr++ = c;
-    pynkf_ocount--;
+  if (io->out_pos < io->outbuf_size) {
+    io->outbuf[io->out_pos++] = (unsigned char)c;
+  } else {
+    Py_ssize_t new_size = io->outbuf_size * 2;
+    unsigned char *p = (unsigned char *)PyMem_Realloc(io->outbuf, new_size + 1);
+    if (p == NULL) {
+      io->oom = 1;
+      return;
+    }
+    io->outbuf = p;
+    io->outbuf_size = new_size;
+    io->outbuf[io->out_pos++] = (unsigned char)c;
   }
 }
-
-#define PERL_XS 1
-#include "nkf/utf8tbl.c"
-#include "nkf/nkf.c"
 
 static PyObject *
 pynkf_convert(unsigned char *str, Py_ssize_t str_len, const char **opts, Py_ssize_t opts_len)
 {
   PyObject *res;
   Py_ssize_t i;
+  nkf_context *ctx;
+  pynkf_io_t io;
+  int ret;
 
-  pynkf_ibufsize = str_len + 1;
-  pynkf_obufsize = pynkf_ibufsize * 1.5 + 256;
-  pynkf_outbuf = (unsigned char *)PyMem_Malloc(pynkf_obufsize);
-  if (pynkf_outbuf == NULL){
-    PyErr_NoMemory();
-    return NULL;
-  }
-  pynkf_outbuf[0] = '\0';
-  pynkf_ocount = pynkf_obufsize;
-  pynkf_optr = pynkf_outbuf;
-  pynkf_icount = 0;
-  pynkf_inbuf  = str;
-  pynkf_iptr = pynkf_inbuf;
-  pynkf_guess_flag = 0;
-
-  if (setjmp(env) == 0){
-
-    reinit();
-
-    for (i = 0; i < opts_len; i++) {
-      options((char *)opts[i]);
-    }
-
-    kanji_convert(NULL);
-
-  }else{
-    PyMem_Free(pynkf_outbuf);
+  ctx = nkf_context_new();
+  if (ctx == NULL) {
     PyErr_NoMemory();
     return NULL;
   }
 
-  /* NKF writes U+0000 as end-of-stream marker in the output encoding.
-     Determine the marker size and strip it from the output. */
-  {
-    Py_ssize_t output_len = pynkf_optr - pynkf_outbuf;
-    Py_ssize_t null_size = 1;
-    if (output_encoding) {
-      nkf_native_encoding *base = nkf_enc_to_base_encoding(output_encoding);
-      if (base == &NkfEncodingUTF_32) null_size = 4;
-      else if (base == &NkfEncodingUTF_16) null_size = 2;
-    }
-    if (output_len >= null_size) output_len -= null_size;
-    res = PyBytes_FromStringAndSize((const char *)pynkf_outbuf, output_len);
+  /* Set options */
+  for (i = 0; i < opts_len; i++) {
+    nkf_options(ctx, opts[i]);
   }
-  PyMem_Free(pynkf_outbuf);
+
+  /* Set up I/O buffers */
+  io.inbuf = str;
+  io.inbuf_size = str_len;
+  io.in_pos = 0;
+  io.outbuf_size = (Py_ssize_t)(str_len * 1.5) + 256;
+  io.outbuf = (unsigned char *)PyMem_Malloc(io.outbuf_size);
+  if (io.outbuf == NULL) {
+    nkf_context_free(ctx);
+    PyErr_NoMemory();
+    return NULL;
+  }
+  io.out_pos = 0;
+  io.suppress_output = 0;
+  io.oom = 0;
+
+  nkf_set_io(ctx, pynkf_io_getc, pynkf_io_ungetc, pynkf_io_putc, &io);
+
+  ret = nkf_convert(ctx);
+
+  if (io.oom || ret != 0) {
+    PyMem_Free(io.outbuf);
+    nkf_context_free(ctx);
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  /* The new ctx-based std_putc does not output end-of-stream markers
+     (EOF is filtered by std_putc), so no null stripping is needed. */
+  res = PyBytes_FromStringAndSize((const char *)io.outbuf, io.out_pos);
+
+  PyMem_Free(io.outbuf);
+  nkf_context_free(ctx);
   return res;
 }
 
 static PyObject *
-pynkf_convert_guess(unsigned char* str, Py_ssize_t str_len)
+pynkf_convert_guess(unsigned char *str, Py_ssize_t str_len)
 {
-  PyObject * res;
+  nkf_context *ctx;
+  pynkf_io_t io;
   const char *codename;
+  PyObject *res;
 
-  pynkf_ibufsize = str_len + 1;
-  pynkf_icount = 0;
-  pynkf_inbuf  = str;
-  pynkf_iptr = pynkf_inbuf;
+  ctx = nkf_context_new();
+  if (ctx == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
 
-  pynkf_guess_flag = 1;
-  reinit();
-  guess_f = 1;
+  io.inbuf = str;
+  io.inbuf_size = str_len;
+  io.in_pos = 0;
+  io.outbuf = NULL;
+  io.outbuf_size = 0;
+  io.out_pos = 0;
+  io.suppress_output = 1;
+  io.oom = 0;
 
-  kanji_convert(NULL);
+  nkf_set_io(ctx, pynkf_io_getc, pynkf_io_ungetc, pynkf_io_putc, &io);
 
-  codename = get_guessed_code();
+  nkf_guess(ctx);
 
+  codename = nkf_get_guessed_code(ctx);
   res = PyUnicode_FromString(codename);
+
+  nkf_context_free(ctx);
   return res;
 }
 
 static PyObject *
-pynkf_convert_guess_detail(unsigned char* str, Py_ssize_t str_len)
+pynkf_convert_guess_detail(unsigned char *str, Py_ssize_t str_len)
 {
+  nkf_context *ctx;
+  pynkf_io_t io;
   const char *codename;
   const char *eol_name;
+  int eol;
+  PyObject *res;
 
-  pynkf_ibufsize = str_len + 1;
-  pynkf_icount = 0;
-  pynkf_inbuf  = str;
-  pynkf_iptr = pynkf_inbuf;
+  ctx = nkf_context_new();
+  if (ctx == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
 
-  pynkf_guess_flag = 1;
-  reinit();
-  guess_f = 1;
+  io.inbuf = str;
+  io.inbuf_size = str_len;
+  io.in_pos = 0;
+  io.outbuf = NULL;
+  io.outbuf_size = 0;
+  io.out_pos = 0;
+  io.suppress_output = 1;
+  io.oom = 0;
 
-  kanji_convert(NULL);
+  nkf_set_io(ctx, pynkf_io_getc, pynkf_io_ungetc, pynkf_io_putc, &io);
 
-  codename = get_guessed_code();
+  nkf_guess(ctx);
 
-  if (input_eol == CR)        eol_name = "CR";
-  else if (input_eol == LF)   eol_name = "LF";
-  else if (input_eol == CRLF) eol_name = "CRLF";
-  else if (input_eol == EOF)  eol_name = "MIXED";
-  else                        eol_name = NULL;
+  codename = nkf_get_guessed_code(ctx);
+  eol = nkf_get_input_eol(ctx);
 
-  return Py_BuildValue("(sz)", codename, eol_name);
+  if (eol == NKF_CR)        eol_name = "CR";
+  else if (eol == NKF_LF)   eol_name = "LF";
+  else if (eol == NKF_CRLF) eol_name = "CRLF";
+  else if (eol == EOF)       eol_name = "MIXED";
+  else                       eol_name = NULL;
+
+  res = Py_BuildValue("(sz)", codename, eol_name);
+
+  nkf_context_free(ctx);
+  return res;
 }
 
 #define PYNKF_OPTS_STACK_SIZE 8
@@ -258,7 +272,7 @@ PyObject *pynkf_guess(PyObject *self, PyObject *args)
 {
   unsigned char *str;
   Py_ssize_t str_len;
-  PyObject* res;
+  PyObject *res;
 
   if (!PyArg_ParseTuple(args, "s#", &str, &str_len)) {
     return NULL;

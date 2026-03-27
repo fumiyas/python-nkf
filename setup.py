@@ -9,6 +9,15 @@ setup(
             "nkf._nkf",
             sources=[
                 "ext/NKF_python.c",
+                "ext/nkf/nkf.c",
+                "ext/nkf/utf8tbl.c",
+            ],
+            include_dirs=[
+                "ext",
+                "ext/nkf",
+            ],
+            define_macros=[
+                ("PERL_XS", "1"),
             ],
         )
     ],
