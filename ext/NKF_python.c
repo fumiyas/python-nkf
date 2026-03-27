@@ -168,15 +168,17 @@ static
 #endif
 PyObject *pynkf_nkf(PyObject *self, PyObject *args)
 {
-    unsigned char *str;
-    Py_ssize_t strlen;
     char *opts;
     Py_ssize_t optslen;
+    Py_buffer data_buf;
+    PyObject *res;
 
-    if (!PyArg_ParseTuple(args, "s#s#", &opts, &optslen, &str, &strlen)) {
+    if (!PyArg_ParseTuple(args, "s#y*", &opts, &optslen, &data_buf)) {
         return NULL;
     }
-    return pynkf_convert(str, strlen, opts, optslen);
+    res = pynkf_convert((unsigned char *)data_buf.buf, data_buf.len, opts, optslen);
+    PyBuffer_Release(&data_buf);
+    return res;
 }
 
 #ifndef EXTERN_NKF
@@ -184,13 +186,15 @@ static
 #endif
 PyObject *pynkf_guess(PyObject *self, PyObject *args)
 {
-    unsigned char *str;
-    Py_ssize_t strlen;
+    Py_buffer data_buf;
+    PyObject *res;
 
-    if (!PyArg_ParseTuple(args, "s#", &str, &strlen)) {
+    if (!PyArg_ParseTuple(args, "y*", &data_buf)) {
         return NULL;
     }
-    return pynkf_convert_guess(str, strlen);
+    res = pynkf_convert_guess((unsigned char *)data_buf.buf, data_buf.len);
+    PyBuffer_Release(&data_buf);
+    return res;
 }
 
 #ifndef EXTERN_NKF

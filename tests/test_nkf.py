@@ -260,3 +260,41 @@ def test_z_output_variants(options, source, expected):
 def test_ms_ucs_mapping():
     source = b"\x81\x60\x81\x61\x81\x7C\x81\x91\x81\x92\x81\xCA"
     _assert_conversion("-w16B0 -S --ms-ucs-map", source, b"\xFF\x5E\x22\x25\xFF\x0D\xFF\xE0\xFF\xE1\xFF\xE2")
+
+
+class TestBufferProtocol:
+    """Test that nkf() and guess() accept buffer protocol objects."""
+
+    _sjis_data = EXAMPLES["sjis"]
+
+    def test_nkf_bytes(self):
+        result = nkf.nkf("-j", self._sjis_data)
+        assert isinstance(result, bytes)
+        assert result == EXAMPLES["jis"]
+
+    def test_nkf_bytearray(self):
+        result = nkf.nkf("-j", bytearray(self._sjis_data))
+        assert isinstance(result, bytes)
+        assert result == EXAMPLES["jis"]
+
+    def test_nkf_memoryview(self):
+        result = nkf.nkf("-j", memoryview(self._sjis_data))
+        assert isinstance(result, bytes)
+        assert result == EXAMPLES["jis"]
+
+    def test_nkf_rejects_str(self):
+        with pytest.raises(TypeError):
+            nkf.nkf("-e", "hello")
+
+    def test_guess_bytes(self):
+        assert nkf.guess(self._sjis_data) == "Shift_JIS"
+
+    def test_guess_bytearray(self):
+        assert nkf.guess(bytearray(self._sjis_data)) == "Shift_JIS"
+
+    def test_guess_memoryview(self):
+        assert nkf.guess(memoryview(self._sjis_data)) == "Shift_JIS"
+
+    def test_guess_rejects_str(self):
+        with pytest.raises(TypeError):
+            nkf.guess("hello")
