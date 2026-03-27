@@ -40,6 +40,10 @@ output = nkf.nkf(flag, input)
 ## For example, to convert from euc-jp to utf-8
 output = nkf.nkf('-Ew', 'some euc-jp string')
 
+## Options can also be passed as a list or tuple
+output = nkf.nkf(['-E', '-w'], 'some euc-jp string')
+output = nkf.nkf(['--ic=euc-jp', '--oc=utf-8n'], 'some euc-jp string')
+
 ## Guess character encoding
 input_encoding = nkf.guess('some string')
 ```

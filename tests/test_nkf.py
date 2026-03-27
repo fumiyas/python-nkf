@@ -260,3 +260,53 @@ def test_z_output_variants(options, source, expected):
 def test_ms_ucs_mapping():
     source = b"\x81\x60\x81\x61\x81\x7C\x81\x91\x81\x92\x81\xCA"
     _assert_conversion("-w16B0 -S --ms-ucs-map", source, b"\xFF\x5E\x22\x25\xFF\x0D\xFF\xE0\xFF\xE1\xFF\xE2")
+
+
+class TestOptionsSequence:
+    """Test that nkf.nkf() accepts list and tuple as the first argument."""
+
+    def test_list_options(self):
+        result = _convert(["-E", "-w"], EXAMPLES["euc"])
+        assert result == EXAMPLES["utf8N"]
+
+    def test_tuple_options(self):
+        result = _convert(("-E", "-w"), EXAMPLES["euc"])
+        assert result == EXAMPLES["utf8N"]
+
+    def test_list_long_options(self):
+        result = _convert(["--ic=euc-jp", "--oc=utf-8n"], EXAMPLES["euc"])
+        assert result == EXAMPLES["utf8N"]
+
+    def test_list_single_element(self):
+        result = _convert(["-w"], EXAMPLES["euc"])
+        assert result == EXAMPLES["utf8N"]
+
+    def test_tuple_single_element(self):
+        result = _convert(("-w",), EXAMPLES["euc"])
+        assert result == EXAMPLES["utf8N"]
+
+    def test_list_multiple_flags(self):
+        source = b"\x81\x60\x81\x61\x81\x7C\x81\x91\x81\x92\x81\xCA"
+        expected = b"\xFF\x5E\x22\x25\xFF\x0D\xFF\xE0\xFF\xE1\xFF\xE2"
+        result = _convert(["-w16B0", "-S", "--ms-ucs-map"], source)
+        assert result == expected
+
+    def test_empty_list(self):
+        result = nkf.nkf([], EXAMPLES["euc"])
+        assert isinstance(result, bytes)
+
+    def test_empty_tuple(self):
+        result = nkf.nkf((), EXAMPLES["euc"])
+        assert isinstance(result, bytes)
+
+    def test_type_error_int(self):
+        with pytest.raises(TypeError):
+            nkf.nkf(123, EXAMPLES["euc"])
+
+    def test_type_error_non_string_in_list(self):
+        with pytest.raises(TypeError):
+            nkf.nkf(["-w", 123], EXAMPLES["euc"])
+
+    def test_type_error_none(self):
+        with pytest.raises(TypeError):
+            nkf.nkf(None, EXAMPLES["euc"])

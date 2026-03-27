@@ -84,11 +84,12 @@ pynkf_putchar(int c)
 #include "nkf/nkf.c"
 
 static PyObject *
-pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t optslen)
+pynkf_convert(unsigned char *str, Py_ssize_t str_len, const char **opts, Py_ssize_t opts_len)
 {
-  PyObject * res;
+  PyObject *res;
+  Py_ssize_t i;
 
-  pynkf_ibufsize = strlen + 1;
+  pynkf_ibufsize = str_len + 1;
   pynkf_obufsize = pynkf_ibufsize * 1.5 + 256;
   pynkf_outbuf = (unsigned char *)PyMem_Malloc(pynkf_obufsize);
   if (pynkf_outbuf == NULL){
@@ -107,7 +108,9 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
 
     reinit();
 
-    options(opts);
+    for (i = 0; i < opts_len; i++) {
+      options((char *)opts[i]);
+    }
 
     kanji_convert(NULL);
 
@@ -124,12 +127,12 @@ pynkf_convert(unsigned char* str, Py_ssize_t strlen, char* opts, Py_ssize_t opts
 }
 
 static PyObject *
-pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
+pynkf_convert_guess(unsigned char* str, Py_ssize_t str_len)
 {
   PyObject * res;
   const char *codename;
 
-  pynkf_ibufsize = strlen + 1;
+  pynkf_ibufsize = str_len + 1;
   pynkf_icount = 0;
   pynkf_inbuf  = str;
   pynkf_iptr = pynkf_inbuf;
@@ -146,21 +149,66 @@ pynkf_convert_guess(unsigned char* str, Py_ssize_t strlen)
   return res;
 }
 
+#define PYNKF_OPTS_STACK_SIZE 8
+
 #ifndef EXTERN_NKF
 static
 #endif
 PyObject *pynkf_nkf(PyObject *self, PyObject *args)
 {
+  PyObject *opts_obj;
   unsigned char *str;
-  Py_ssize_t strlen;
-  char *opts;
-  Py_ssize_t optslen;
-  PyObject* res;
+  Py_ssize_t str_len;
+  const char *opts_stack[PYNKF_OPTS_STACK_SIZE];
+  const char **opts = opts_stack;
+  Py_ssize_t opts_len;
+  Py_ssize_t i;
+  PyObject *res;
 
-  if (!PyArg_ParseTuple(args, "s#s#", &opts, &optslen, &str, &strlen)) {
+  if (!PyArg_ParseTuple(args, "Os#", &opts_obj, &str, &str_len)) {
     return NULL;
   }
-  res = pynkf_convert(str, strlen, opts, optslen);
+
+  if (PyUnicode_Check(opts_obj)) {
+    const char *opt = PyUnicode_AsUTF8(opts_obj);
+    if (opt == NULL) {
+      return NULL;
+    }
+    opts[0] = opt;
+    opts_len = 1;
+  } else if (PyList_Check(opts_obj) || PyTuple_Check(opts_obj)) {
+    int is_tuple = PyTuple_Check(opts_obj);
+    opts_len = is_tuple ? PyTuple_GET_SIZE(opts_obj) : PyList_GET_SIZE(opts_obj);
+
+    if (opts_len > PYNKF_OPTS_STACK_SIZE) {
+      opts = (const char **)PyMem_Malloc(sizeof(const char *) * opts_len);
+      if (opts == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+      }
+    }
+
+    for (i = 0; i < opts_len; i++) {
+      PyObject *item = is_tuple ? PyTuple_GET_ITEM(opts_obj, i) : PyList_GET_ITEM(opts_obj, i);
+      if (!PyUnicode_Check(item)) {
+        if (opts != opts_stack) PyMem_Free(opts);
+        PyErr_SetString(PyExc_TypeError, "options must be strings");
+        return NULL;
+      }
+      const char *opt = PyUnicode_AsUTF8(item);
+      if (opt == NULL) {
+        if (opts != opts_stack) PyMem_Free(opts);
+        return NULL;
+      }
+      opts[i] = opt;
+    }
+  } else {
+    PyErr_SetString(PyExc_TypeError, "first argument must be a string, list, or tuple");
+    return NULL;
+  }
+
+  res = pynkf_convert(str, str_len, opts, opts_len);
+  if (opts != opts_stack) PyMem_Free(opts);
   return res;
 }
 
@@ -170,13 +218,13 @@ static
 PyObject *pynkf_guess(PyObject *self, PyObject *args)
 {
   unsigned char *str;
-  Py_ssize_t strlen;
+  Py_ssize_t str_len;
   PyObject* res;
 
-  if (!PyArg_ParseTuple(args, "s#", &str, &strlen)) {
+  if (!PyArg_ParseTuple(args, "s#", &str, &str_len)) {
     return NULL;
   }
-  res = pynkf_convert_guess(str, strlen);
+  res = pynkf_convert_guess(str, str_len);
   return res;
 }
 
