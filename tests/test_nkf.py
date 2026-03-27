@@ -310,3 +310,50 @@ class TestOptionsSequence:
     def test_type_error_none(self):
         with pytest.raises(TypeError):
             nkf.nkf(None, EXAMPLES["euc"])
+
+
+class TestGuessDetail:
+    """Test nkf.guess_detail() returns (encoding, newline) tuple."""
+
+    def test_returns_tuple(self):
+        result = nkf.guess_detail(EXAMPLES["utf8N"])
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+
+    @pytest.mark.parametrize(
+        ("source_key", "expected_encoding"),
+        [
+            ("jis", "ISO-2022-JP"),
+            ("sjis", "Shift_JIS"),
+            ("euc", "EUC-JP"),
+            ("utf8N", "UTF-8"),
+        ],
+    )
+    def test_encoding_detection(self, source_key, expected_encoding):
+        encoding, _ = nkf.guess_detail(EXAMPLES[source_key])
+        assert encoding == expected_encoding
+
+    def test_newline_lf(self):
+        data = "あいう\nえお\n".encode("utf-8")
+        _, newline = nkf.guess_detail(data)
+        assert newline == "LF"
+
+    def test_newline_cr(self):
+        data = "あいう\rえお\r".encode("utf-8")
+        _, newline = nkf.guess_detail(data)
+        assert newline == "CR"
+
+    def test_newline_crlf(self):
+        data = "あいう\r\nえお\r\n".encode("utf-8")
+        _, newline = nkf.guess_detail(data)
+        assert newline == "CRLF"
+
+    def test_newline_mixed(self):
+        data = "あいう\nえお\r\n".encode("utf-8")
+        _, newline = nkf.guess_detail(data)
+        assert newline == "MIXED"
+
+    def test_newline_none(self):
+        data = "あいう".encode("utf-8")
+        _, newline = nkf.guess_detail(data)
+        assert newline is None

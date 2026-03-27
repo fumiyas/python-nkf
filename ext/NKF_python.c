@@ -149,6 +149,34 @@ pynkf_convert_guess(unsigned char* str, Py_ssize_t str_len)
   return res;
 }
 
+static PyObject *
+pynkf_convert_guess_detail(unsigned char* str, Py_ssize_t str_len)
+{
+  const char *codename;
+  const char *eol_name;
+
+  pynkf_ibufsize = str_len + 1;
+  pynkf_icount = 0;
+  pynkf_inbuf  = str;
+  pynkf_iptr = pynkf_inbuf;
+
+  pynkf_guess_flag = 1;
+  reinit();
+  guess_f = 1;
+
+  kanji_convert(NULL);
+
+  codename = get_guessed_code();
+
+  if (input_eol == CR)        eol_name = "CR";
+  else if (input_eol == LF)   eol_name = "LF";
+  else if (input_eol == CRLF) eol_name = "CRLF";
+  else if (input_eol == EOF)  eol_name = "MIXED";
+  else                        eol_name = NULL;
+
+  return Py_BuildValue("(sz)", codename, eol_name);
+}
+
 #define PYNKF_OPTS_STACK_SIZE 8
 
 #ifndef EXTERN_NKF
@@ -229,10 +257,27 @@ PyObject *pynkf_guess(PyObject *self, PyObject *args)
 }
 
 #ifndef EXTERN_NKF
+static
+#endif
+PyObject *pynkf_guess_detail(PyObject *self, PyObject *args)
+{
+  unsigned char *str;
+  Py_ssize_t str_len;
+  PyObject *res;
+
+  if (!PyArg_ParseTuple(args, "s#", &str, &str_len)) {
+    return NULL;
+  }
+  res = pynkf_convert_guess_detail(str, str_len);
+  return res;
+}
+
+#ifndef EXTERN_NKF
 static PyMethodDef
 nkfMethods[] = {
   {"nkf", pynkf_nkf, METH_VARARGS, ""},
   {"guess", pynkf_guess, METH_VARARGS, ""},
+  {"guess_detail", pynkf_guess_detail, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
 };
 

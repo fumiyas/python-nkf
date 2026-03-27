@@ -46,6 +46,9 @@ output = nkf.nkf(['--ic=euc-jp', '--oc=utf-8n'], 'some euc-jp string')
 
 ## Guess character encoding
 input_encoding = nkf.guess('some string')
+
+## Guess character encoding and newline type
+encoding, newline = nkf.guess_detail('some string')
 ```
 
 `guess()` function guesses an input string encoding and returns
@@ -64,3 +67,12 @@ one of next strings:
 * `UTF-8`
 * `UTF-16`
 * `UTF-32`
+
+`guess_detail()` function returns a tuple of `(encoding, newline)`.
+`encoding` is same as `guess()`, and `newline` is one of:
+
+* `None` (no newline detected)
+* `LF`
+* `CR`
+* `CRLF`
+* `MIXED`
