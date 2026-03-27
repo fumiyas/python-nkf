@@ -1,7 +1,9 @@
 UV=			uv
 UVX=			uvx
 TOX=			$(UV) run tox
-SOURCE_DATE_EPOCH=	$(shell git log -1 --pretty=%ct)
+GIT=			git
+
+SOURCE_DATE_EPOCH=	$(shell $(GIT) log -1 --pretty=%ct)
 
 DIST_ENV=		SOURCE_DATE_EPOCH="$(SOURCE_DATE_EPOCH)"
 
