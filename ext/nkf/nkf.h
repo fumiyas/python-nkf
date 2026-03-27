@@ -46,13 +46,7 @@ typedef int nkf_char;
 #endif
 #endif
 
-#ifdef PERL_XS
-#undef OVERWRITE
-#endif
-
-#ifndef PERL_XS
 #include <stdio.h>
-#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -180,10 +174,6 @@ void  setbinmode(FILE *fp)
 #else
 #  define ARG_UNUSED
 #endif
-#endif
-
-#ifdef WIN32DLL
-#include "nkf32.h"
 #endif
 
 #endif /* NKF_H */

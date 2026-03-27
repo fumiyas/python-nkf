@@ -29,6 +29,7 @@
 #include "config.h"
 #include "nkf.h"
 #include "utf8tbl.h"
+#include "nkf_context.h"
 #ifdef __WIN32__
 #include <windows.h>
 #include <locale.h>
@@ -132,10 +133,7 @@ enum nkf_encodings {
     JIS_X_0213_1 = 0x1233 /* Q */
 };
 
-/* Forward declare nkf_context_t */
-typedef struct nkf_context nkf_context_t;
-
-/* Context-aware function pointer types */
+/* Context-aware function pointer types (internal) */
 typedef nkf_char (*nkf_iconv_fn)(nkf_context_t *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
 typedef void (*nkf_oconv_fn)(nkf_context_t *ctx, nkf_char c2, nkf_char c1);
 typedef nkf_char (*nkf_getc_ctx_fn)(nkf_context_t *ctx);
@@ -149,11 +147,6 @@ static void set_input_codename(nkf_context_t *ctx, const char *codename);
 static struct input_code* find_inputcode_byfunc(nkf_context_t *ctx, nkf_iconv_fn iconv_func);
 static void mime_putc(nkf_context_t *ctx, nkf_char c);
 static nkf_char mime_getc(nkf_context_t *ctx);
-
-/* External I/O callbacks */
-typedef nkf_char (*nkf_ext_getc_fn)(void *user_data);
-typedef nkf_char (*nkf_ext_ungetc_fn)(nkf_char c, void *user_data);
-typedef void     (*nkf_ext_putc_fn)(nkf_char c, void *user_data);
 
 /* Forward declarations - iconv/oconv functions */
 static nkf_char s_iconv(nkf_context_t *ctx, nkf_char c2, nkf_char c1, nkf_char c0);
@@ -2944,7 +2937,6 @@ code_status(nkf_context_t *ctx, nkf_char c)
 
 
 
-#ifndef WIN32DLL
 static nkf_char
 std_getc(nkf_context_t *ctx)
 {
@@ -2953,7 +2945,6 @@ std_getc(nkf_context_t *ctx)
     }
     return ctx->ext_getc(ctx->input_user_data);
 }
-#endif /*WIN32DLL*/
 
 static nkf_char
 std_ungetc(nkf_context_t *ctx, nkf_char c)
@@ -5418,9 +5409,6 @@ nkf_context_reinit(nkf_context_t *ctx)
     if (ctx->nfc_buf) nkf_buf_clear(ctx->nfc_buf);
     ctx->broken_state = 0;
     ctx->mimeout_state_char = 0;
-#ifdef WIN32DLL
-    reinitdll();
-#endif /*WIN32DLL*/
 }
 
 static int
@@ -6101,9 +6089,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 		p = 0;
 	    }
 	    if (p == 0) {
-#if !defined(PERL_XS) && !defined(WIN32DLL)
-		fprintf(stderr, "unknown long option: --%s\n", cp);
-#endif
 		return -1;
 	    }
 	    while(*cp && *cp != SP && cp++);
@@ -6111,12 +6096,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
-#ifndef PERL_XS
-		if (strcmp(long_option[i].name, "help") == 0){
-		    usage();
-		    exit(EXIT_SUCCESS);
-		}
-#endif
 		if (strcmp(long_option[i].name, "ic=") == 0){
 		    enc = nkf_enc_find((char *)p);
 		    if (!enc) continue;
@@ -6308,9 +6287,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 		    }
 		    continue;
 		}
-#if !defined(PERL_XS) && !defined(WIN32DLL)
-		fprintf(stderr, "unsupported long option: --%s\n", long_option[i].name);
-#endif
 		return -1;
 	    }
 	    continue;
@@ -6377,16 +6353,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 	case 'T':
 	    ctx->binmode_f = FALSE;
 	    continue;
-#endif
-#ifndef PERL_XS
-	case 'V':
-	    show_configuration();
-	    exit(EXIT_SUCCESS);
-	    break;
-	case 'v':
-	    version();
-	    exit(EXIT_SUCCESS);
-	    break;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 	case 'w':           /* UTF-{8,16,32} output */
@@ -6563,11 +6529,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 	    else
 		ctx->broken_f |= TRUE;
 	    continue;
-#ifndef PERL_XS
-	case 'O':/* for Output file */
-	    ctx->file_out_f = TRUE;
-	    continue;
-#endif
 	case 'c':/* add cr code */
 	    ctx->eolmode_f = CRLF;
 	    continue;
@@ -6588,7 +6549,6 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 		ctx->eolmode_f = 0; cp++;
 	    }
 	    continue;
-#ifndef PERL_XS
 	case 'g':
 	    if ('2' <= *cp && *cp <= '9') {
 		ctx->guess_f = 2;
@@ -6600,15 +6560,11 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 		ctx->guess_f = 1;
 	    }
 	    continue;
-#endif
 	case SP:
 	    /* module multiple options in a string are allowed for Perl module  */
 	    while(*cp && *cp++!='-');
 	    continue;
 	default:
-#if !defined(PERL_XS) && !defined(WIN32DLL)
-	    fprintf(stderr, "unknown option: -%c\n", *(cp-1));
-#endif
 	    /* bogus option but ignored */
 	    return -1;
 	}
@@ -6619,51 +6575,65 @@ nkf_options(nkf_context_t *ctx, unsigned char *cp)
 
 
 /* ============================================================
- * Backward compatibility shim for NKF_python.c
+ * Public API implementation (nkf_context.h)
  * ============================================================ */
 
-static nkf_context_t *_compat_ctx = NULL;
-
-static nkf_char _compat_getc(void *ud) {
-    (void)ud;
-    return getc(stdin);
+nkf_context_t *
+nkf_context_new(void)
+{
+    nkf_context_t *ctx = nkf_xmalloc(sizeof(nkf_context_t));
+    if (!ctx) return NULL;
+    memset(ctx, 0, sizeof(nkf_context_t));
+    ctx->std_gc_buf = nkf_buf_new(STD_GC_BUFSIZE);
+    ctx->broken_buf = nkf_buf_new(3);
+    ctx->nfc_buf = nkf_buf_new(9);
+    nkf_context_reinit(ctx);
+    return ctx;
 }
 
-static void _compat_putc(nkf_char c, void *ud) {
-    (void)ud;
-    putchar(c);
+void
+nkf_context_free(nkf_context_t *ctx)
+{
+    if (!ctx) return;
+    if (ctx->std_gc_buf) nkf_buf_dispose(ctx->std_gc_buf);
+    if (ctx->broken_buf) nkf_buf_dispose(ctx->broken_buf);
+    if (ctx->nfc_buf) nkf_buf_dispose(ctx->nfc_buf);
+    nkf_xfree(ctx);
 }
 
-static nkf_char _compat_ungetc(nkf_char c, void *ud) {
-    (void)ud;
-    return ungetc(c, stdin);
+void
+nkf_context_set_input(nkf_context_t *ctx,
+                       nkf_ext_getc_fn getc_fn,
+                       nkf_ext_ungetc_fn ungetc_fn,
+                       void *user_data)
+{
+    ctx->ext_getc = getc_fn;
+    ctx->ext_ungetc = ungetc_fn;
+    ctx->input_user_data = user_data;
 }
 
-static void reinit(void) {
-    if (!_compat_ctx) {
-        _compat_ctx = nkf_xmalloc(sizeof(nkf_context_t));
-        memset(_compat_ctx, 0, sizeof(nkf_context_t));
-        _compat_ctx->std_gc_buf = nkf_buf_new(STD_GC_BUFSIZE);
-        _compat_ctx->broken_buf = nkf_buf_new(3);
-        _compat_ctx->nfc_buf = nkf_buf_new(9);
+void
+nkf_context_set_output(nkf_context_t *ctx,
+                        nkf_ext_putc_fn putc_fn,
+                        void *user_data)
+{
+    ctx->ext_putc = putc_fn;
+    ctx->output_user_data = user_data;
+}
+
+int
+nkf_convert(nkf_context_t *ctx, const char *opts)
+{
+    nkf_context_reinit(ctx);
+    if (opts) {
+        int rc = nkf_options(ctx, (unsigned char *)opts);
+        if (rc < 0) return rc;
     }
-    _compat_ctx->ext_getc = _compat_getc;
-    _compat_ctx->ext_ungetc = _compat_ungetc;
-    _compat_ctx->ext_putc = _compat_putc;
-    nkf_context_reinit(_compat_ctx);
+    return nkf_kanji_convert(ctx);
 }
 
-static int options(unsigned char *cp) {
-    return nkf_options(_compat_ctx, cp);
+const char *
+nkf_get_guessed_code(nkf_context_t *ctx)
+{
+    return nkf_get_guessed_code_impl(ctx);
 }
-
-static void kanji_convert(FILE *f) {
-    nkf_kanji_convert(_compat_ctx);
-}
-
-static const char *get_guessed_code(void) {
-    return nkf_get_guessed_code_impl(_compat_ctx);
-}
-
-#undef guess_f
-#define guess_f (_compat_ctx->guess_f)
