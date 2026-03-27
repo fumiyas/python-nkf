@@ -16,19 +16,16 @@ Downloads = "https://pypi.org/project/nkf/"
 
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=77", "setuptools-scm[toml]>=8"]
+requires = [
+    "setuptools>=77",
+    "setuptools-scm[toml]>=8",
+]
 
 [dependency-groups]
 dev = [
     "pytest",
     "tox-uv>=1.33",
 ]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.setuptools_scm]
 
