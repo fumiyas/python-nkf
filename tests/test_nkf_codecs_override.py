@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 ## -*- coding: utf-8 -*- vim:shiftwidth=4:expandtab:
 
-def test_nkf():
+def test_override_encodings():
     import nkf.codecs
     import codecs
     import io
 
-    nkf.codecs.overrideEncodings()
+    nkf.codecs.override_encodings()
 
     # ASCII
     unicoded = u'abc ABC'
