@@ -8,15 +8,13 @@
 #ifndef NKF_H
 #define NKF_H
 
-#include "nkf_internal.h"
-
 /* Forward declaration (opaque) */
 typedef struct nkf_context nkf_context_t;
 
 /* External I/O callback types */
-typedef nkf_char (*nkf_ext_getc_fn)(void *user_data);
-typedef nkf_char (*nkf_ext_ungetc_fn)(nkf_char c, void *user_data);
-typedef void     (*nkf_ext_putc_fn)(nkf_char c, void *user_data);
+typedef int (*nkf_ext_getc_fn)(void *user_data);
+typedef int (*nkf_ext_ungetc_fn)(int c, void *user_data);
+typedef void (*nkf_ext_putc_fn)(int c, void *user_data);
 
 /* Lifecycle */
 nkf_context_t *nkf_context_new(void);

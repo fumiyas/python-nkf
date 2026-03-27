@@ -30,16 +30,16 @@ typedef struct {
     int error;
 } pynkf_io_t;
 
-static nkf_char
+static int
 pynkf_ext_getc(void *user_data)
 {
     pynkf_io_t *io = (pynkf_io_t *)user_data;
     if (io->in_ptr >= io->in_end) return EOF;
-    return (nkf_char)(*io->in_ptr++);
+    return (int)(*io->in_ptr++);
 }
 
-static nkf_char
-pynkf_ext_ungetc(nkf_char c, void *user_data)
+static int
+pynkf_ext_ungetc(int c, void *user_data)
 {
     pynkf_io_t *io = (pynkf_io_t *)user_data;
     if (io->in_ptr <= io->in_buf) return EOF;
@@ -48,7 +48,7 @@ pynkf_ext_ungetc(nkf_char c, void *user_data)
 }
 
 static void
-pynkf_ext_putc(nkf_char c, void *user_data)
+pynkf_ext_putc(int c, void *user_data)
 {
     pynkf_io_t *io = (pynkf_io_t *)user_data;
     if (io->error) return;
@@ -71,7 +71,7 @@ pynkf_ext_putc(nkf_char c, void *user_data)
 
 /* Discard output (used for guess mode) */
 static void
-pynkf_ext_putc_discard(nkf_char c, void *user_data)
+pynkf_ext_putc_discard(int c, void *user_data)
 {
     (void)c;
     (void)user_data;
