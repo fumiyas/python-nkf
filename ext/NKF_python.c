@@ -120,8 +120,19 @@ pynkf_convert(unsigned char *str, Py_ssize_t str_len, const char **opts, Py_ssiz
     return NULL;
   }
 
-  *pynkf_optr = 0;
-  res = PyBytes_FromString(pynkf_outbuf);
+  /* NKF writes U+0000 as end-of-stream marker in the output encoding.
+     Determine the marker size and strip it from the output. */
+  {
+    Py_ssize_t output_len = pynkf_optr - pynkf_outbuf;
+    Py_ssize_t null_size = 1;
+    if (output_encoding) {
+      nkf_native_encoding *base = nkf_enc_to_base_encoding(output_encoding);
+      if (base == &NkfEncodingUTF_32) null_size = 4;
+      else if (base == &NkfEncodingUTF_16) null_size = 2;
+    }
+    if (output_len >= null_size) output_len -= null_size;
+    res = PyBytes_FromStringAndSize((const char *)pynkf_outbuf, output_len);
+  }
   PyMem_Free(pynkf_outbuf);
   return res;
 }

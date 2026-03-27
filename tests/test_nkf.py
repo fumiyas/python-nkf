@@ -7,9 +7,26 @@ import nkf
 import pytest
 
 
+def _uudecode_line(raw):
+    """Decode a single uuencoded line, tolerant of non-zero padding like Perl."""
+    nbytes = (raw[0] - 0x20) & 0x3F
+    out = bytearray()
+    i = 1
+    while len(out) < nbytes:
+        a = (raw[i] - 0x20) & 0x3F if i < len(raw) else 0
+        b = (raw[i + 1] - 0x20) & 0x3F if i + 1 < len(raw) else 0
+        c = (raw[i + 2] - 0x20) & 0x3F if i + 2 < len(raw) else 0
+        d = (raw[i + 3] - 0x20) & 0x3F if i + 3 < len(raw) else 0
+        out.append((a << 2) | (b >> 4))
+        out.append(((b & 0xF) << 4) | (c >> 2))
+        out.append(((c & 0x3) << 6) | d)
+        i += 4
+    return bytes(out[:nbytes])
+
+
 def _uudecode_block(block):
     return b"".join(
-        binascii.a2b_uu((line + "\n").encode("ascii"))
+        _uudecode_line(line.encode("ascii"))
         for line in block.strip().splitlines()
     )
 
@@ -147,6 +164,9 @@ M)4(;*$(*&RA))4(P,25",#$E0C`Q)4(P,25",#$E0C`Q)4(P,25",#$E0C`Q
 ;XH"5XHBE[[R-[[^@[[^A[[^B[[^C[[^D[[^E
 '''),
 }
+
+# Fix upstream uuencode data error in u16B0 (1-byte encoding mistake at offset 44)
+EXAMPLES["u16B0"] = EXAMPLES["u16B"][2:]
 
 
 @pytest.mark.parametrize(
@@ -357,3 +377,161 @@ class TestGuessDetail:
         data = "あいう".encode("utf-8")
         _, newline = nkf.guess_detail(data)
         assert newline is None
+
+
+# --- New EXAMPLES data (Section A) ---
+
+EXAMPLES["jis2"] = _uudecode_block(r'''
++&R1".EA&(QLH0@H`
+''')
+
+EXAMPLES["sjis2"] = _uudecode_block(r'''
+%C=:3H0H`
+''')
+
+EXAMPLES["euc2"] = _uudecode_block(r'''
+%NMC&HPH`
+''')
+
+EXAMPLES["utf2"] = _uudecode_block(r'''
+'YI:.Z)>D"@``
+''')
+
+
+# --- Section A: UTF-16 conversions via short options ---
+
+@pytest.mark.parametrize(
+    ("options", "source_key", "expected_key"),
+    [
+        # JIS to U16L/U16B
+        ("-w16L", "jis", "u16L"),
+        ("-w16B", "jis", "u16B"),
+        # SJIS to U16L/U16B
+        ("-w16L", "sjis", "u16L"),
+        ("-w16B", "sjis", "u16B"),
+        # EUC to U16L/U16B
+        ("-w16L", "euc", "u16L"),
+        ("-w16B", "euc", "u16B"),
+        # UTF8 to U16L/U16B/U16L0/U16B0
+        ("-w16L", "utf8N", "u16L"),
+        ("-w16L0", "utf8N", "u16L0"),
+        ("-w16B", "utf8N", "u16B"),
+        ("-w16B0", "utf8N", "u16B0"),
+    ],
+)
+def test_utf16_conversion_short_options(options, source_key, expected_key):
+    _assert_conversion(options, EXAMPLES[source_key], EXAMPLES[expected_key])
+
+
+# --- Section A: Full --ic/--oc conversion matrix ---
+
+@pytest.mark.parametrize(
+    ("options", "source_key", "expected_key"),
+    [
+        # JIS source (--ic=iso-2022-jp)
+        (["--ic=iso-2022-jp", "--oc=iso-2022-jp"], "jis", "jis"),
+        (["--ic=iso-2022-jp", "--oc=euc-jp"], "jis", "euc"),
+        (["--ic=iso-2022-jp", "--oc=utf-8n"], "jis", "utf8N"),
+        (["--ic=iso-2022-jp", "--oc=utf-16le-bom"], "jis", "u16L"),
+        (["--ic=iso-2022-jp", "--oc=utf-16be-bom"], "jis", "u16B"),
+        # SJIS source (--ic=shift_jis)
+        (["--ic=shift_jis", "--oc=iso-2022-jp"], "sjis", "jis"),
+        (["--ic=shift_jis", "--oc=shift_jis"], "sjis", "sjis"),
+        (["--ic=shift_jis", "--oc=utf-8n"], "sjis", "utf8N"),
+        (["--ic=shift_jis", "--oc=utf-16le-bom"], "sjis", "u16L"),
+        (["--ic=shift_jis", "--oc=utf-16be-bom"], "sjis", "u16B"),
+        # EUC source (--ic=euc-jp)
+        (["--ic=euc-jp", "--oc=iso-2022-jp"], "euc", "jis"),
+        (["--ic=euc-jp", "--oc=shift_jis"], "euc", "sjis"),
+        (["--ic=euc-jp", "--oc=euc-jp"], "euc", "euc"),
+        (["--ic=euc-jp", "--oc=utf-16le-bom"], "euc", "u16L"),
+        (["--ic=euc-jp", "--oc=utf-16be-bom"], "euc", "u16B"),
+        # UTF-8 source (--ic=utf-8)
+        (["--ic=utf-8", "--oc=shift_jis"], "utf8N", "sjis"),
+        (["--ic=utf-8", "--oc=euc-jp"], "utf8N", "euc"),
+        (["--ic=utf-8", "--oc=utf-8"], "utf8N", "utf8N"),
+        (["--ic=utf-8", "--oc=utf-8n"], "utf8N", "utf8N"),
+        (["--ic=utf-8", "--oc=utf-16le-bom"], "utf8N", "u16L"),
+        (["--ic=utf-8", "--oc=utf-16le"], "utf8N", "u16L0"),
+        (["--ic=utf-8", "--oc=utf-16be-bom"], "utf8N", "u16B"),
+        (["--ic=utf-8", "--oc=utf-16be"], "utf8N", "u16B0"),
+    ],
+)
+def test_ic_oc_conversion_matrix(options, source_key, expected_key):
+    _assert_conversion(options, EXAMPLES[source_key], EXAMPLES[expected_key])
+
+
+# --- Section A: Secondary example set conversion matrix (jis2/sjis2/euc2/utf2) ---
+
+@pytest.mark.parametrize(
+    ("options", "source_key", "expected_key"),
+    [
+        ("-j", "jis2", "jis2"),
+        ("-s", "jis2", "sjis2"),
+        ("-e", "jis2", "euc2"),
+        ("-w", "jis2", "utf2"),
+        ("-j", "sjis2", "jis2"),
+        ("-s", "sjis2", "sjis2"),
+        ("-e", "sjis2", "euc2"),
+        ("-w", "sjis2", "utf2"),
+        ("-j", "euc2", "jis2"),
+        ("-s", "euc2", "sjis2"),
+        ("-e", "euc2", "euc2"),
+        ("-w", "euc2", "utf2"),
+        ("-j", "utf2", "jis2"),
+        ("-s", "utf2", "sjis2"),
+        ("-e", "utf2", "euc2"),
+        ("-w", "utf2", "utf2"),
+    ],
+)
+def test_secondary_conversion_matrix(options, source_key, expected_key):
+    _assert_conversion(options, EXAMPLES[source_key], EXAMPLES[expected_key])
+
+
+# --- Section B: UTF-32 output variants ---
+
+@pytest.mark.parametrize(
+    ("options", "source", "expected"),
+    [
+        ("-w32", _hex("82A0"), _hex("0000FEFF00003042")),
+        ("--oc=UTF-32", _hex("82A0"), _hex("0000FEFF00003042")),
+        ("-w32B", _hex("82A0"), _hex("0000FEFF00003042")),
+        ("-w32B0", _hex("82A0"), _hex("00003042")),
+        ("--oc=UTF-32BE", _hex("82A0"), _hex("00003042")),
+        ("--oc=UTF-32BE-BOM", _hex("82A0"), _hex("0000FEFF00003042")),
+        ("-w32L", _hex("82A0"), _hex("FFFE000042300000")),
+        ("-w32L0", _hex("82A0"), _hex("42300000")),
+        ("--oc=UTF-32LE", _hex("82A0"), _hex("42300000")),
+        ("--oc=UTF-32LE-BOM", _hex("82A0"), _hex("FFFE000042300000")),
+    ],
+)
+def test_utf32_output_variants(options, source, expected):
+    _assert_conversion(options, source, expected)
+
+
+# --- Section C: UTF-8 edge cases ---
+
+def test_utf8_smp_character():
+    _assert_conversion("-w", b"\xf0\xa0\x80\x8b", b"\xf0\xa0\x80\x8b")
+
+
+def test_utf8_jis_second_level_kanji():
+    source = b"\xe9\xa4\x83\xe5\xad\x90"
+    _assert_conversion("-w", source, source)
+
+
+# --- Additional UTF output variants (long-form --oc= options) ---
+
+@pytest.mark.parametrize(
+    ("options", "source", "expected"),
+    [
+        ("--oc=UTF-8", _hex("82A0"), _hex("E38182")),
+        ("--oc=UTF-8N", _hex("82A0"), _hex("E38182")),
+        ("--oc=UTF-16", _hex("82A0"), _hex("FEFF3042")),
+        ("-w16B", _hex("82A0"), _hex("FEFF3042")),
+        ("--oc=UTF-16BE-BOM", _hex("82A0"), _hex("FEFF3042")),
+        ("--oc=UTF-16LE-BOM", _hex("82A0"), _hex("FFFE4230")),
+    ],
+)
+def test_additional_utf_output_variants(options, source, expected):
+    _assert_conversion(options, source, expected)
