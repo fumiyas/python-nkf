@@ -16,7 +16,7 @@
 #define PY_SSIZE_T_CLEAN
 
 #include "Python.h"
-#include "nkf/nkf_context.h"
+#include "nkf/nkf.h"
 
 /* Per-call I/O state (stack-allocated, no globals) */
 typedef struct {

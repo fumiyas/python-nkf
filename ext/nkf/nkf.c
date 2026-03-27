@@ -27,9 +27,9 @@
     "Copyright (C) 1996-2018, The nkf Project."
 
 #include "config.h"
-#include "nkf.h"
+#include "nkf_internal.h"
 #include "utf8tbl.h"
-#include "nkf_context.h"
+#include "nkf.h"
 #ifdef __WIN32__
 #include <windows.h>
 #include <locale.h>
