@@ -194,11 +194,7 @@
 
 #define HOLD_SIZE       1024
 
-#if defined(INT_IS_SHORT)
-#define IOBUF_SIZE      2048
-#else
 #define IOBUF_SIZE      16384
-#endif
 
 #define DEFAULT_J       'B'
 #define DEFAULT_R       'B'

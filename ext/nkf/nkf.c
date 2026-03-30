@@ -205,11 +205,6 @@ struct {
 /* I don't trust portablity of toupper */
 
 
-#if defined(INT_IS_SHORT)
-#else
-#endif
-
-
 
 
 
@@ -547,10 +542,6 @@ nkf_locale_charmap(void)
     sprintf(buf, "CP%d", GetACP());
     return buf;
 #elif defined(__OS2__)
-# if defined(INT_IS_SHORT)
-    /* OS/2 1.x */
-    return NULL;
-# else
     /* OS/2 32bit */
     static char buf[16];
     ULONG ulCP[1], ulncp;
@@ -560,7 +551,6 @@ nkf_locale_charmap(void)
     else
         sprintf(buf, "CP%lu", ulCP[0]);
     return buf;
-# endif
 #endif
     return NULL;
 }

@@ -14,11 +14,7 @@
 
 /* Compatibility definitions */
 
-#ifdef nkf_char
-#elif defined(INT_IS_SHORT)
-typedef long nkf_char;
-#define NKF_INT32_C(n)   (n##L)
-#else
+#ifndef nkf_char
 typedef int nkf_char;
 #define NKF_INT32_C(n)   (n)
 #endif
