@@ -14,6 +14,9 @@ readme = "README.md"
 Homepage = "https://github.com/fumiyas/python-nkf"
 Downloads = "https://pypi.org/project/nkf/"
 
+[project.scripts]
+pynkf = "nkf.__main__:main"
+
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
